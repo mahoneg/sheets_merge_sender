@@ -1,0 +1,16 @@
+module.exports = Object.freeze({
+  defaultSpreadsheetId: '10qPkK1HpQINElAO8rQ93DXGshwDFm7UU-oJLDV3-vpg',
+  memberSheetName: "List",
+  templateSheetName: "Template",
+  FIRST_NAME_COL: 1,
+  PHONE_COL: 3,
+  EMAIL_COL: 4,
+  YEARS_COL: 5,
+  TEST_SENDER_LEVEL: 'TEST_SENDER_LEVEL',
+  TEST_SENDER_LIVE: 'LIVE',
+  TEST_SENDER_TO_PHONE: 'TEST_PHONE',
+  TEST_SENDER_TO_FILE: 'TEST_FILE',
+  TEST_DEFAULT_PHONE_NUMBER: '+18777804236',
+  TEST_DEFAULT_EMAIL_ADDR: 'mahoneg1\@gmail.com',
+  TEST_DEFAULT_FILE_PATH : '.\\send_file.txt',
+}); 

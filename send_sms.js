@@ -4,8 +4,9 @@
 const accountSid = process.env.TWILIO_ACCOUNT_SID;
 const authToken = process.env.TWILIO_AUTH_TOKEN;
 const twilioClient = require('twilio')(accountSid, authToken);
+const messageMap = new Map(); 
 
-export default function send_sms (msg, toNumber) { 
+async function send_sms (msg, toNumber, rowNum) { 
   
   twilioClient.messages
     .create({
@@ -13,7 +14,11 @@ export default function send_sms (msg, toNumber) {
       from: '+16592745880',
       to: toNumber
     })
-    .then(message => console.log(message.sid));
+    .then(message => {
+      console.log(message.sid)
+    });
 
-  return message.sid
+  // return message.sid
 }
+
+module.exports = { send_sms };
