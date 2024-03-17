@@ -1,4 +1,5 @@
 
+require('dotenv').config();
 const constants = require('./constants');
 const sendSMS = require('./send_sms');
 
@@ -93,7 +94,7 @@ const {
     if (filePath != undefined) {
       console.log(sendMsg);  // use actual file later.
     } else {
-      // send_email(semdMsg, toEmail);
+      send_email(semdMsg, toEmail);
     }
   }
 
