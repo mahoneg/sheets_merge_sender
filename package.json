@@ -1,0 +1,17 @@
+{
+  "name": "sheets_merge_sender",
+  "version": "1.0.0",
+  "description": "send text msg to members in spreadsheet",
+  "main": "aniversary_sender.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "dotenv": "^16.4.5",
+    "googleapis": "^133.0.0",
+    "nodemailer": "^6.9.11",
+    "twilio": "^4.23.0"
+  }
+}
