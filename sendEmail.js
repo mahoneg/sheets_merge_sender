@@ -1,9 +1,9 @@
 const nodemailer = require("nodemailer");
 
+const transporter = require("./keys/emailTransporter");
+
 const fromEmailAddr = "mahoneg1@gmail.com";
 const hohoFromEmailAddr = "hohosecretary@gmail.com";
-
-const transporter = nodemailer.createTransport({});
 
 function send_email(sendMsg, toEmail) {
   const toAndHoho = toEmail + ", " + hohoFromEmailAddr;
