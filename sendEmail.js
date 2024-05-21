@@ -14,7 +14,7 @@ function send_email(sendMsg, toEmail) {
     text: sendMsg,
   };
 
-  transporter.sendMail(mailOptions);
+  transporter.transporter.sendMail(mailOptions);
 }
 
 module.exports = { send_email };
