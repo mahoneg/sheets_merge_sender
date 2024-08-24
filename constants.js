@@ -1,6 +1,6 @@
 module.exports = Object.freeze({
-  // defaultSpreadsheetId: '10qPkK1HpQINElAO8rQ93DXGshwDFm7UU-oJLDV3-vpg',
-  defaultSpreadsheetId: '12wGA2Y7au6B9VSey7gcdkH4vwo61tkkzEOMjb2WZvpM',
+  defaultSpreadsheetId: '10qPkK1HpQINElAO8rQ93DXGshwDFm7UU-oJLDV3-vpg',
+  // defaultSpreadsheetId: '12wGA2Y7au6B9VSey7gcdkH4vwo61tkkzEOMjb2WZvpM',
   memberSheetName: "List",
   templateSheetName: "Template",
   FIRST_NAME_COL: 1,
