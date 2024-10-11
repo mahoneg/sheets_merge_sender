@@ -1,5 +1,7 @@
+// 1jaCgRYmH6dynqvfBPA95jd5FL5EGLA4eAMOeC-YefPs
+// 10qPkK1HpQINElAO8rQ93DXGshwDFm7UU-oJLDV3-vpg
 module.exports = Object.freeze({
-  defaultSpreadsheetId: '10qPkK1HpQINElAO8rQ93DXGshwDFm7UU-oJLDV3-vpg',
+  defaultSpreadsheetId: '1jaCgRYmH6dynqvfBPA95jd5FL5EGLA4eAMOeC-YefPs',
   memberSheetName: "List",
   templateSheetName: "Template",
   FIRST_NAME_COL: 1,
@@ -15,4 +17,6 @@ module.exports = Object.freeze({
   TEST_DEFAULT_PHONE_NUMBER: '+18777804236',
   TEST_DEFAULT_EMAIL_ADDR: 'mahoneg1\@gmail.com',
   TEST_DEFAULT_FILE_PATH : '.\\send_file.txt',
+  SPREADSHEET_LOCAL: 'SPEADSHEET_LOCAL',
+  SPREADSHEET_REMOTE: 'SPEADSHEET_REMOTE',
 }); 

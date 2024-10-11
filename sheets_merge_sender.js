@@ -1,14 +1,21 @@
 require("dotenv").config();
+const XLSX = require("xlsx");
 const fs = require("fs");
+const dayjs = require("dayjs");
 const constants = require("./constants");
 const sendSMS = require("./sendSMS");
 const sendEmail = require("./sendEmail");
 
+// const {
+//   getAuthToken,
+//   getGoogleSpreadSheet,
+//   getSpreadSheetValues,
+// } = require("./googleSheetsService.js");
+
 const {
-  getAuthToken,
-  getSpreadSheet,
-  getSpreadSheetValues,
-} = require("./googleSheetsService.js");
+  getLocalSpreadSheet,
+  getLocalSpreadSheetValues,
+} = require("./localSheetsService.js");
 
 const spreadsheetId = constants.defaultSpreadsheetId;
 
@@ -25,37 +32,64 @@ function closeFd(fd) {
   });
 }
 
+// function checkMember(member) {
+//   if (member[constants.FIRST_NAME_COL] === "") {
+//     // no first name -- BAD
+//     return null;
+//   }
+
+//   if (
+//     member[constants.PHONE_COL] === "" &&
+//     member[constants.EMAIL_COL] === ""
+//   ) {
+//     // no phone or email.
+//     return null;
+//   }
+
+//   if (member[constants.PHONE_COL] !== "") {
+//     member.push("phone");
+//   } else {
+//     member.push("email");
+//   }
+
+//   return member;
+// }
 function checkMember(member) {
-  if (member[constants.FIRST_NAME_COL] === "") {
+  if (member["FirstName"] === "") {
     // no first name -- BAD
     return null;
   }
 
-  if (
-    member[constants.PHONE_COL] === "" &&
-    member[constants.EMAIL_COL] === ""
-  ) {
+  if (member["Phone"] === "" && member["email"] === "") {
     // no phone or email.
     return null;
   }
 
-  if (member[constants.PHONE_COL] !== "") {
-    member.push("phone");
+  if (member["Phone"]) {
+    member["SendBy"] = "phone";
   } else {
-    member.push("email");
+    member["SendBy"] = "email";
   }
 
   return member;
 }
 
 function subsituteTemplate(member, template, celebrationDate) {
+  // returnString = template
+  //   .replace("<FirstName>", member[constants.FIRST_NAME_COL])
+  //   .replace("<LastName>", member[constants.LAST_NAME_COL]);
+  // returnString = returnString
+  //   .replace("<CelebrationDate>", celebrationDate)
+  //   .replace("<Sobriety>", member[constants.SOBRIETY_COL])
+  //   .replace("<SobrietyUnit>", member[constants.UNITS_COL]);
+
   returnString = template
-    .replace("<FirstName>", member[constants.FIRST_NAME_COL])
-    .replace("<LastName>", member[constants.LAST_NAME_COL]);
+    .replace("<FirstName>", member["FirstName"])
+    .replace("<LastName>", member["LastName"]);
   returnString = returnString
     .replace("<CelebrationDate>", celebrationDate)
-    .replace("<Sobriety>", member[constants.SOBRIETY_COL])
-    .replace("<SobrietyUnit>", member[constants.UNITS_COL]);
+    .replace("<Sobriety>", member["Sobriety"])
+    .replace("<SobrietyUnit>", member["SobrietyUnit"]);
 
   // console.log(returnString);
   return returnString;
@@ -63,24 +97,19 @@ function subsituteTemplate(member, template, celebrationDate) {
 
 async function openSpreadSheet() {
   try {
-    const auth = await getAuthToken();
-    const response = await getSpreadSheet({
-      spreadsheetId,
-      auth,
-    });
+    const spreadSheet = await getLocalSpreadSheet();
+    return spreadSheet;
     // console.log('output for getSpreadSheet', JSON.stringify(response.data, null, 2));
   } catch (error) {
     console.log(error.message, error.stack);
   }
 }
 
-async function getSheetValues(sheetName) {
+async function getSheetValues(spreadSheet, sheetName) {
   try {
-    const auth = await getAuthToken();
-    const response = await getSpreadSheetValues({
-      spreadsheetId,
+    const response = await getLocalSpreadSheetValues({
+      spreadSheet,
       sheetName,
-      auth,
     });
 
     // console.log('output for getSpreadSheetValues', JSON.stringify(response.data, null, 2));
@@ -182,33 +211,54 @@ function setupRunningMode() {
 async function main() {
   //
   setupRunningMode();
-  openSpreadSheet();
+  const spreadSheetFile = await openSpreadSheet();
   let msgTemplatePromise;
   let celebrantPromise;
-  msgTemplatePromise = await getSheetValues("Template");
-  celebrantPromise = await getSheetValues("List");
-  msgTemplate = msgTemplatePromise.data.values[0];
-  msgTemplate = msgTemplate[0];
-  celebrantList = celebrantPromise.data.values;
+  msgTemplatePromise = await getSheetValues(spreadSheetFile, "Template");
+  celebrantPromise = await getSheetValues(spreadSheetFile, "List");
+  let ops = { header: 0 };
+  let ops2 = { header: 0 };
+  let msgTemplate = "";
+  // msgTemplate = msgTemplatePromise.data.values[0];
+  // msgTemplate = msgTemplate[0];
+  // celebrantList = celebrantPromise.data.values;
+
+  try {
+    const msgTemplateList = XLSX.utils.sheet_to_json(msgTemplatePromise, ops);
+    console.log(msgTemplateList);
+    for (const row of msgTemplateList) {
+      msgTemplate = msgTemplate + row.messageTextLines + "\n";
+    }
+  } catch (error) {
+    console.log(error.message, error.stack);
+  }
+  //msgTemplate = msgTemplate[0];
+  try {
+    celebrantList = XLSX.utils.sheet_to_json(celebrantPromise, ops2);
+  } catch (error) {
+    console.log(error.message, error.stack);
+  }
 
   // // use row 0 to setup indexes but for now lets just get it processed..
-  titles = celebrantList.shift();
+  // titles = celebrantList.shift();
   memberCount = 0;
 
   for (const member of celebrantList) {
     memberCount++;
 
     if (memberCount == 1) {
-      celebrationDate = member.pop();
+      const tmpDate = new Date(Date.UTC(0, 0, member["CelebrationDate"]));
+      const tmpdayjs = dayjs(tmpDate);
+      celebrationDate = tmpdayjs.format("ddd MMM D");
     }
 
     if (checkMember(member)) {
       sendMsg = subsituteTemplate(member, msgTemplate, celebrationDate);
 
-      if (member[member.length - 1] === "phone") {
-        sendTextMsg(sendMsg, member[constants.PHONE_COL]);
+      if (member["SendBy"] === "phone") {
+        sendTextMsg(sendMsg, member["Phone"]);
       } else {
-        sendEmailMsg(sendMsg, member[constants.EMAIL_COL]);
+        sendEmailMsg(sendMsg, member["email"]);
       }
     }
 
