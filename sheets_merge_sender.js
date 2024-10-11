@@ -125,6 +125,11 @@ function fixPhoneNumber(phoneNum) {
   return returnString;
 }
 
+function fixTemplate(inTemplate) {
+  let fixed = inTemplate.replace(/\r/g, ""); // get rid of CR
+  return fixed;
+}
+
 function sendTextMsg(sendMsg, toNumber) {
   toNumber = overridePhoneNumber != undefined ? overridePhoneNumber : toNumber;
 
@@ -132,7 +137,9 @@ function sendTextMsg(sendMsg, toNumber) {
     // console.log(sendMsg);  // use actual file later.
     fs.appendFileSync(
       fileD,
-      "\n\n*********** send txt msg *******************\n\n",
+      "\n\n*********** send txt msg -" +
+        toNumber +
+        " - *******************\n\n",
       "utf8",
       (err) => {
         closeFd(fileD);
@@ -224,11 +231,15 @@ async function main() {
   // celebrantList = celebrantPromise.data.values;
 
   try {
-    const msgTemplateList = XLSX.utils.sheet_to_json(msgTemplatePromise, ops);
-    console.log(msgTemplateList);
-    for (const row of msgTemplateList) {
-      msgTemplate = msgTemplate + row.messageTextLines + "\n";
-    }
+    console.log(msgTemplatePromise);
+    const lclMsgTemplate = msgTemplatePromise.A1.v;
+    msgTemplate = fixTemplate(lclMsgTemplate);
+
+    // const msgTemplateList = XLSX.utils.sheet_to_json(msgTemplatePromise, ops);
+    // console.log(msgTemplateList);
+    // for (const row of msgTemplateList) {
+    //   msgTemplate = msgTemplate + row.messageTextLines + "\n";
+    // }
   } catch (error) {
     console.log(error.message, error.stack);
   }
