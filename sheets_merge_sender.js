@@ -18,7 +18,8 @@ const {
 } = require("./localSheetsService.js");
 
 const spreadsheetId = constants.defaultSpreadsheetId;
-
+const Phone = "Phone/email";
+const LastName = "LastName (initial)";
 let liveMode = true;
 let overridePhoneNumber = undefined;
 let overrideEmail = undefined;
@@ -60,12 +61,12 @@ function checkMember(member) {
     return null;
   }
 
-  if (member["Phone"] === "" && member["email"] === "") {
+  if (member[Phone] === "" && member["email"] === "") {
     // no phone or email.
     return null;
   }
 
-  if (member["Phone"]) {
+  if (member[Phone]) {
     member["SendBy"] = "phone";
   } else {
     member["SendBy"] = "email";
@@ -83,13 +84,19 @@ function subsituteTemplate(member, template, celebrationDate) {
   //   .replace("<Sobriety>", member[constants.SOBRIETY_COL])
   //   .replace("<SobrietyUnit>", member[constants.UNITS_COL]);
 
+  let sobrietyUnit = member["SobrietyUnit"];
+  if (sobrietyUnit === "days") {
+    sobrietyUnit = "day"
+  } else if (member["SobrietyUnit"] === "years") {
+    sobrietyUnit = "year"
+  }
   returnString = template
     .replace("<FirstName>", member["FirstName"])
-    .replace("<LastName>", member["LastName"]);
+    .replace("<LastName>", member[LastName]);
   returnString = returnString
     .replace("<CelebrationDate>", celebrationDate)
     .replace("<Sobriety>", member["Sobriety"])
-    .replace("<SobrietyUnit>", member["SobrietyUnit"]);
+    .replace("<SobrietyUnit>", sobrietyUnit);
 
   // console.log(returnString);
   return returnString;
@@ -267,7 +274,7 @@ async function main() {
       sendMsg = subsituteTemplate(member, msgTemplate, celebrationDate);
 
       if (member["SendBy"] === "phone") {
-        sendTextMsg(sendMsg, member["Phone"]);
+        sendTextMsg(sendMsg, member[Phone]);
       } else {
         sendEmailMsg(sendMsg, member["email"]);
       }
