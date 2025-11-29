@@ -1,0 +1,603 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Sheets Merge Sender - Browser Version</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/dayjs@1.11.10/dayjs.min.js"></script>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 20px;
+        background-color: #f5f5f5;
+      }
+      .container {
+        background: white;
+        padding: 30px;
+        border-radius: 10px;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+      }
+      .header {
+        text-align: center;
+        margin-bottom: 30px;
+        color: #333;
+      }
+      .file-input-section {
+        margin-bottom: 30px;
+        padding: 20px;
+        background: #f8f9fa;
+        border-radius: 8px;
+      }
+      .settings-section {
+        margin-bottom: 30px;
+        padding: 20px;
+        background: #f8f9fa;
+        border-radius: 8px;
+      }
+      .template-section {
+        margin-bottom: 30px;
+      }
+      .template-textarea {
+        width: 100%;
+        height: 150px;
+        padding: 10px;
+        border: 1px solid #ddd;
+        border-radius: 5px;
+        font-family: monospace;
+      }
+      .results-section {
+        margin-top: 30px;
+      }
+      .log-output {
+        background: #f8f9fa;
+        border: 1px solid #ddd;
+        border-radius: 5px;
+        padding: 15px;
+        height: 300px;
+        overflow-y: auto;
+        font-family: monospace;
+        font-size: 12px;
+        white-space: pre-wrap;
+      }
+      .btn {
+        background: #007bff;
+        color: white;
+        border: none;
+        padding: 10px 20px;
+        border-radius: 5px;
+        cursor: pointer;
+        margin: 5px;
+      }
+      .btn:hover {
+        background: #0056b3;
+      }
+      .btn:disabled {
+        background: #6c757d;
+        cursor: not-allowed;
+      }
+      .btn-secondary {
+        background: #6c757d;
+      }
+      .btn-secondary:hover {
+        background: #545b62;
+      }
+      .form-group {
+        margin-bottom: 15px;
+      }
+      .form-group label {
+        display: block;
+        margin-bottom: 5px;
+        font-weight: bold;
+      }
+      .form-group input,
+      .form-group select {
+        width: 100%;
+        padding: 8px;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+      }
+      .status {
+        padding: 10px;
+        margin: 10px 0;
+        border-radius: 5px;
+      }
+      .status.success {
+        background: #d4edda;
+        color: #155724;
+        border: 1px solid #c3e6cb;
+      }
+      .status.error {
+        background: #f8d7da;
+        color: #721c24;
+        border: 1px solid #f5c6cb;
+      }
+      .status.info {
+        background: #d1ecf1;
+        color: #0c5460;
+        border: 1px solid #bee5eb;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <div class="header">
+        <h1>Sheets Merge Sender - Browser Version</h1>
+        <p>Upload an Excel file and send personalized messages to contacts</p>
+      </div>
+
+      <div class="file-input-section">
+        <h3>📁 Upload Excel File</h3>
+        <div class="form-group">
+          <label for="excelFile">Select Excel file (.xlsx):</label>
+          <input type="file" id="excelFile" accept=".xlsx,.xls" />
+        </div>
+        <button class="btn" onclick="loadExcelFile()">Load File</button>
+      </div>
+
+      <div class="settings-section">
+        <h3>⚙️ Settings</h3>
+        <div class="form-group">
+          <label for="modeSelect">Mode:</label>
+          <select id="modeSelect">
+            <option value="preview">Preview Only</option>
+            <option value="email">Send Email</option>
+            <option value="sms">Send SMS</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="maxNotifies">Max Notifications:</label>
+          <input type="number" id="maxNotifies" value="1000000" min="1" />
+        </div>
+        <div class="form-group">
+          <label for="testPhone">Test Phone Number (for SMS mode):</label>
+          <input type="tel" id="testPhone" placeholder="+1234567890" />
+        </div>
+        <div class="form-group">
+          <label for="testEmail">Test Email (for Email mode):</label>
+          <input type="email" id="testEmail" placeholder="test@example.com" />
+        </div>
+      </div>
+
+      <div class="template-section">
+        <h3>📝 Message Template</h3>
+        <p>
+          Use these placeholders: &lt;FirstName&gt;, &lt;LastName&gt;,
+          &lt;CelebrationDate&gt;, &lt;Sobriety&gt;, &lt;SobrietyUnit&gt;
+        </p>
+        <textarea
+          id="messageTemplate"
+          class="template-textarea"
+          placeholder="Enter your message template here..."
+        >
+Dear <FirstName> <LastName>,
+
+Congratulations on your <Sobriety> <SobrietyUnit> of sobriety! 
+
+We're celebrating your achievement on <CelebrationDate>.
+
+Keep up the great work!
+
+Best regards,
+Your Support Team</textarea
+        >
+      </div>
+
+      <div style="text-align: center">
+        <button
+          class="btn"
+          onclick="processContacts()"
+          id="processBtn"
+          disabled
+        >
+          Process Contacts
+        </button>
+        <button class="btn btn-secondary" onclick="clearLog()">
+          Clear Log
+        </button>
+        <button class="btn btn-secondary" onclick="downloadLog()">
+          Download Log
+        </button>
+      </div>
+
+      <div class="results-section">
+        <h3>📊 Results</h3>
+        <div id="statusContainer"></div>
+        <div class="log-output" id="logOutput"></div>
+      </div>
+    </div>
+
+    <script>
+      // Constants (browser version)
+      const constants = {
+        defaultSpreadsheetId: "10qPkK1HpQINElAO8rQ93DXGshwDFm7UU-oJLDV3-vpg",
+        memberSheetName: "List",
+        templateSheetName: "Template",
+        FIRST_NAME_COL: 1,
+        LAST_NAME_COL: 2,
+        PHONE_COL: 3,
+        EMAIL_COL: 4,
+        SOBRIETY_COL: 5,
+        UNITS_COL: 6,
+        TEST_SENDER_LEVEL: "TEST_SENDER_LEVEL",
+        TEST_SENDER_LIVE: "LIVE",
+        TEST_SENDER_TO_PHONE: "TEST_PHONE",
+        TEST_SENDER_TO_FILE: "TEST_FILE",
+        TEST_DEFAULT_PHONE_NUMBER: "+18777804236",
+        TEST_DEFAULT_EMAIL_ADDR: "mahoneg1@gmail.com",
+        TEST_DEFAULT_FILE_PATH: "./send_file.txt",
+        SPREADSHEET_LOCAL: "SPEADSHEET_LOCAL",
+        SPREADSHEET_REMOTE: "SPEADSHEET_REMOTE",
+      };
+
+      // Global variables
+      let spreadsheetData = null;
+      let memberCount = 0;
+      let logMessages = [];
+
+      // Utility functions
+      function log(message) {
+        const timestamp = new Date().toLocaleTimeString();
+        const logMessage = `[${timestamp}] ${message}`;
+        logMessages.push(logMessage);
+
+        const logOutput = document.getElementById("logOutput");
+        logOutput.textContent = logMessages.join("\n");
+        logOutput.scrollTop = logOutput.scrollHeight;
+
+        console.log(logMessage);
+      }
+
+      function addStatus(message, type = "info") {
+        const statusContainer = document.getElementById("statusContainer");
+        const statusDiv = document.createElement("div");
+        statusDiv.className = `status ${type}`;
+        statusDiv.textContent = message;
+        statusContainer.appendChild(statusDiv);
+
+        // Remove status after 5 seconds
+        setTimeout(() => {
+          if (statusDiv.parentNode) {
+            statusDiv.parentNode.removeChild(statusDiv);
+          }
+        }, 5000);
+      }
+
+      function clearLog() {
+        logMessages = [];
+        document.getElementById("logOutput").textContent = "";
+        document.getElementById("statusContainer").innerHTML = "";
+      }
+
+      function downloadLog() {
+        const content = logMessages.join("\n");
+        const blob = new Blob([content], { type: "text/plain" });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = `merge_sender_log_${new Date()
+          .toISOString()
+          .slice(0, 19)
+          .replace(/:/g, "-")}.txt`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+      }
+
+      // File handling functions
+      function loadExcelFile() {
+        const fileInput = document.getElementById("excelFile");
+        const file = fileInput.files[0];
+
+        if (!file) {
+          addStatus("Please select a file first", "error");
+          return;
+        }
+
+        const reader = new FileReader();
+        reader.onload = function (e) {
+          try {
+            const data = new Uint8Array(e.target.result);
+            const workbook = XLSX.read(data, { type: "array" });
+            spreadsheetData = workbook;
+
+            log(`Successfully loaded Excel file: ${file.name}`);
+            log(`Available sheets: ${workbook.SheetNames.join(", ")}`);
+
+            document.getElementById("processBtn").disabled = false;
+            addStatus("Excel file loaded successfully!", "success");
+          } catch (error) {
+            log(`Error loading Excel file: ${error.message}`);
+            addStatus("Error loading Excel file", "error");
+          }
+        };
+        reader.readAsArrayBuffer(file);
+      }
+
+      // Member validation function
+      function checkMember(member) {
+        if (!member["FirstName"] || member["FirstName"] === "") {
+          return null;
+        }
+
+        if (
+          (!member["Phone/email"] || member["Phone/email"] === "") &&
+          (!member["email"] || member["email"] === "")
+        ) {
+          return null;
+        }
+
+        if (member["Phone/email"] && member["Phone/email"] !== "") {
+          member["SendBy"] = "phone";
+        } else {
+          member["SendBy"] = "email";
+        }
+
+        return member;
+      }
+
+      // Template substitution function
+      function substituteTemplate(member, template, celebrationDate) {
+        let sobrietyUnit = member["SobrietyUnit"];
+        if (sobrietyUnit === "days") {
+          sobrietyUnit = "day";
+        } else if (sobrietyUnit === "years") {
+          sobrietyUnit = "year";
+        }
+
+        let returnString = template
+          .replace(/<FirstName>/g, member["FirstName"] || "")
+          .replace(/<LastName>/g, member["LastName (initial)"] || "");
+
+        returnString = returnString
+          .replace(/<CelebrationDate>/g, celebrationDate || "")
+          .replace(/<Sobriety>/g, member["Sobriety"] || "")
+          .replace(/<SobrietyUnit>/g, sobrietyUnit || "");
+
+        return returnString;
+      }
+
+      // Browser-compatible SMS sending with backend API
+      async function sendTextMsg(sendMsg, toNumber) {
+        const testPhone = document.getElementById("testPhone").value;
+        const actualNumber = testPhone || toNumber;
+
+        log(`\n*********** SEND SMS MESSAGE ***********`);
+        log(`To: ${actualNumber}`);
+        log(`Message: ${sendMsg}`);
+
+        try {
+          const response = await fetch("/api/send-sms", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              to: actualNumber,
+              message: sendMsg,
+            }),
+          });
+
+          const result = await response.json();
+
+          if (result.success) {
+            log(`✅ SMS sent successfully! Message ID: ${result.messageId}`);
+          } else {
+            log(`❌ SMS failed: ${result.error}`);
+          }
+        } catch (error) {
+          log(`❌ SMS error: ${error.message}`);
+        }
+
+        log(`*****************************************\n`);
+      }
+
+      // Browser-compatible email sending with backend API
+      async function sendEmailMsg(sendMsg, toEmail) {
+        const testEmail = document.getElementById("testEmail").value;
+        const actualEmail = testEmail || toEmail;
+
+        log(`\n*********** SEND EMAIL MESSAGE ***********`);
+        log(`To: ${actualEmail}`);
+        log(`Subject: HoHoKus St Barts Celebration`);
+        log(`Message: ${sendMsg}`);
+
+        try {
+          const response = await fetch("/api/send-email", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              to: actualEmail,
+              message: sendMsg,
+              subject: "HoHoKus St Barts Celebration",
+            }),
+          });
+
+          const result = await response.json();
+
+          if (result.success) {
+            log(`✅ Email sent successfully! Message ID: ${result.messageId}`);
+          } else {
+            log(`❌ Email failed: ${result.error}`);
+          }
+        } catch (error) {
+          log(`❌ Email error: ${error.message}`);
+        }
+
+        log(`*******************************************\n`);
+      }
+
+      // Main processing function
+      async function processContacts() {
+        if (!spreadsheetData) {
+          addStatus("Please load an Excel file first", "error");
+          return;
+        }
+
+        const mode = document.getElementById("modeSelect").value;
+        const maxNotifies = parseInt(
+          document.getElementById("maxNotifies").value
+        );
+
+        log("Starting contact processing...");
+        addStatus("Processing contacts...", "info");
+
+        try {
+          // Get the List sheet
+          const listSheet = spreadsheetData.Sheets["List"];
+          if (!listSheet) {
+            throw new Error("List sheet not found in Excel file");
+          }
+
+          // Convert sheet to JSON
+          const celebrantList = XLSX.utils.sheet_to_json(listSheet);
+          log(`Found ${celebrantList.length} contacts in the List sheet`);
+
+          // Get message template
+          const msgTemplate = document.getElementById("messageTemplate").value;
+          if (!msgTemplate.trim()) {
+            throw new Error("Please enter a message template");
+          }
+
+          memberCount = 0;
+          let processedCount = 0;
+          let skippedCount = 0;
+
+          for (const member of celebrantList) {
+            memberCount++;
+
+            if (memberCount === 1) {
+              // Parse celebration date from Excel date number
+              if (member["CelebrationDate"]) {
+                const tmpDate = new Date(
+                  Date.UTC(0, 0, member["CelebrationDate"])
+                );
+                const celebrationDate = dayjs(tmpDate).format("ddd MMM D");
+                log(`Celebration date: ${celebrationDate}`);
+              }
+            }
+
+            const validMember = checkMember(member);
+            if (validMember) {
+              const celebrationDate = member["CelebrationDate"]
+                ? dayjs(
+                    new Date(Date.UTC(0, 0, member["CelebrationDate"]))
+                  ).format("ddd MMM D")
+                : "the celebration date";
+
+              const sendMsg = substituteTemplate(
+                validMember,
+                msgTemplate,
+                celebrationDate
+              );
+
+              if (mode === "preview") {
+                log(`\n--- PREVIEW MESSAGE ${memberCount} ---`);
+                log(
+                  `Name: ${validMember["FirstName"]} ${
+                    validMember["LastName (initial)"] || ""
+                  }`
+                );
+                log(`Send by: ${validMember["SendBy"]}`);
+                log(
+                  `Contact: ${
+                    validMember["SendBy"] === "phone"
+                      ? validMember["Phone/email"]
+                      : validMember["email"]
+                  }`
+                );
+                log(`Message: ${sendMsg}`);
+                log(`--- END PREVIEW ---\n`);
+              } else if (mode === "sms" && validMember["SendBy"] === "phone") {
+                sendTextMsg(sendMsg, validMember["Phone/email"]);
+                processedCount++;
+              } else if (
+                mode === "email" &&
+                validMember["SendBy"] === "email"
+              ) {
+                sendEmailMsg(sendMsg, validMember["email"]);
+                processedCount++;
+              }
+
+              if (mode !== "preview") {
+                log(
+                  `Processed member ${memberCount}: ${validMember["FirstName"]} (${validMember["SendBy"]})`
+                );
+              }
+            } else {
+              skippedCount++;
+              log(
+                `Skipped member ${memberCount}: ${
+                  member["FirstName"] || "Unknown"
+                } - missing required data`
+              );
+            }
+
+            if (memberCount >= maxNotifies) {
+              log(`Reached maximum notifications limit: ${maxNotifies}`);
+              break;
+            }
+          }
+
+          log(`\n=== PROCESSING COMPLETE ===`);
+          log(`Total contacts: ${celebrantList.length}`);
+          log(`Processed: ${processedCount}`);
+          log(`Skipped: ${skippedCount}`);
+          log(`Mode: ${mode.toUpperCase()}`);
+          log(`===============================\n`);
+
+          addStatus(
+            `Processing complete! Processed: ${processedCount}, Skipped: ${skippedCount}`,
+            "success"
+          );
+        } catch (error) {
+          log(`Error during processing: ${error.message}`);
+          addStatus(`Error: ${error.message}`, "error");
+        }
+      }
+
+      // Check backend status
+      async function checkBackendStatus() {
+        try {
+          const response = await fetch("/api/health");
+          const result = await response.json();
+
+          if (result.status === "healthy") {
+            log("✅ Backend server is running");
+            log(
+              `📧 Email service: ${
+                result.services.email ? "Configured" : "Not configured"
+              }`
+            );
+            log(
+              `📱 SMS service: ${
+                result.services.twilio ? "Configured" : "Not configured"
+              }`
+            );
+          } else {
+            log("❌ Backend server is not responding");
+          }
+        } catch (error) {
+          log("❌ Cannot connect to backend server");
+          log(
+            "💡 Make sure the backend server is running on http://localhost:3000"
+          );
+        }
+      }
+
+      // Initialize the application
+      document.addEventListener("DOMContentLoaded", function () {
+        log("Sheets Merge Sender Browser Version initialized");
+        log("Please upload an Excel file to begin");
+
+        // Check backend status on startup
+        checkBackendStatus();
+      });
+    </script>
+  </body>
+</html>
