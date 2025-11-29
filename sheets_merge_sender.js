@@ -61,6 +61,10 @@ function checkMember(member) {
     return null;
   }
 
+  if (member[LastName] === undefined) {
+    member[LastName] = "";
+  }
+
   if (member[Phone] === "" && member["email"] === "") {
     // no phone or email.
     return null;
@@ -85,10 +89,11 @@ function subsituteTemplate(member, template, celebrationDate) {
   //   .replace("<SobrietyUnit>", member[constants.UNITS_COL]);
 
   let sobrietyUnit = member["SobrietyUnit"];
+  sobrietyUnit = sobrietyUnit.toLowerCase();
   if (sobrietyUnit === "days") {
-    sobrietyUnit = "day"
+    sobrietyUnit = "day";
   } else if (member["SobrietyUnit"] === "years") {
-    sobrietyUnit = "year"
+    sobrietyUnit = "year";
   }
   returnString = template
     .replace("<FirstName>", member["FirstName"])
