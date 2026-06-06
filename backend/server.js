@@ -2,6 +2,8 @@ const express = require("express");
 const cors = require("cors");
 const twilio = require("twilio");
 const nodemailer = require("nodemailer");
+const fs = require("fs");
+const XLSX = require("xlsx");
 const dotenv = require("dotenv");
 const path = require("path");
 
@@ -23,7 +25,7 @@ const twilioClient = twilio(
 );
 
 // Email transporter configuration
-const emailTransporter = nodemailer.createTransporter({
+const emailTransporter = nodemailer.createTransport({
   service: "gmail",
   auth: {
     user: process.env.EMAIL_USER,
@@ -33,7 +35,35 @@ const emailTransporter = nodemailer.createTransporter({
 
 // Routes
 app.get("/", (req, res) => {
-  res.sendFile(path.join(__dirname, "../sheets_merge_sender_browser.html"));
+  res.sendFile(path.join(__dirname, "sheets_merge_sender_browser.html"));
+});
+
+// Items endpoint (sample data for ag-grid)
+app.get("/api/items", (req, res) => {
+  try {
+    const xlsxPath = path.join(__dirname, "MergeList.xlsx");
+    if (fs.existsSync(xlsxPath)) {
+      const workbook = XLSX.readFile(xlsxPath);
+      const firstSheet = workbook.SheetNames[0];
+      const worksheet = workbook.Sheets[firstSheet];
+      // Convert sheet to JSON rows (objects) — empty cells become null
+      const items = XLSX.utils.sheet_to_json(worksheet, { defval: null });
+      return res.json(items);
+    }
+
+    // Fallback sample data if MergeList.xlsx not present
+    const items = [
+      { id: 1, name: "Item A", value: 100 },
+      { id: 2, name: "Item B", value: 200 },
+      { id: 3, name: "Item C", value: 300 },
+    ];
+    res.json(items);
+  } catch (err) {
+    console.error("Failed to load MergeList.xlsx", err);
+    res
+      .status(500)
+      .json({ error: "Failed to load items", details: err.message });
+  }
 });
 
 // SMS sending endpoint

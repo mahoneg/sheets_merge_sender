@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Sheets Merge Sender - Items</title>
+    <link
+      rel="stylesheet"
+      href="https://unpkg.com/ag-grid-community/styles/ag-grid.css"
+    />
+    <link
+      rel="stylesheet"
+      href="https://unpkg.com/ag-grid-community/styles/ag-theme-alpine.css"
+    />
+    <style>
+      body {
+        font-family: Arial, Helvetica, sans-serif;
+        margin: 16px;
+      }
+      #controls {
+        margin-bottom: 8px;
+      }
+      #myGrid {
+        height: 400px;
+        width: 100%;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Loaded Items</h1>
+    <div id="controls">
+      <button id="loadBtn">Load Items</button>
+      <button id="refreshBtn">Refresh</button>
+    </div>
+
+    <div id="myGrid" class="ag-theme-alpine"></div>
+
+    <script src="https://unpkg.com/ag-grid-community@26.2.0/dist/ag-grid-community.min.js"></script>
+    <script>
+      const gridDiv = document.querySelector("#myGrid");
+
+      // Column definitions - will be adapted when data loads
+      let columnDefs = [
+        { field: "id", headerName: "ID", sortable: true, filter: true },
+        { field: "name", headerName: "Name", sortable: true, filter: true },
+        { field: "value", headerName: "Value", sortable: true, filter: true },
+      ];
+
+      const gridOptions = {
+        columnDefs: columnDefs,
+        rowData: null,
+        defaultColDef: {
+          resizable: true,
+        },
+        animateRows: true,
+      };
+
+      // create the grid with diagnostics/fallbacks
+      function createGrid() {
+        const available = {
+          agGrid: window.agGrid,
+          AgGrid: window.AgGrid,
+          ag_grid: window["ag-grid"],
+        };
+
+        // Try common global locations for the constructor
+        const GridCtor =
+          window.agGrid?.Grid ||
+          window.AgGrid?.Grid ||
+          window["ag-grid"]?.Grid ||
+          window.agGrid ||
+          window.AgGrid;
+
+        if (typeof GridCtor === "function") {
+          new GridCtor(gridDiv, gridOptions);
+          return;
+        }
+
+        console.error(
+          "ag-grid Grid constructor not found. Available globals:",
+          available
+        );
+        gridDiv.innerHTML =
+          '<pre style="color:red">ag-grid bundle not loaded correctly. Check console for details.</pre>';
+      }
+
+      createGrid();
+
+      async function loadItems() {
+        try {
+          const res = await fetch("/api/items");
+          if (!res.ok) throw new Error("Failed to fetch items: " + res.status);
+          const items = await res.json();
+
+          // If items exist, adapt columns to data keys (simple heuristic)
+          if (Array.isArray(items) && items.length > 0) {
+            const keys = Object.keys(items[0]);
+            gridOptions.api.setColumnDefs(
+              keys.map((k) => ({ field: k, headerName: k }))
+            );
+          }
+
+          gridOptions.api.setRowData(items);
+        } catch (err) {
+          alert("Error loading items: " + err.message);
+          console.error(err);
+        }
+      }
+
+      document.getElementById("loadBtn").addEventListener("click", loadItems);
+      document.getElementById("refreshBtn").addEventListener("click", () => {
+        gridOptions.api.refreshCells();
+      });
+
+      // Auto-load on page open
+      loadItems();
+    </script>
+  </body>
+</html>
