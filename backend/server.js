@@ -308,6 +308,10 @@ app.listen(PORT, () => {
   console.log("  GET  /api/config - Configuration info");
   console.log("  POST /api/send-sms - Send SMS");
   console.log("  POST /api/send-email - Send email");
+  console.log("  POST /api/send-test-file - Write a message to today's test file");
+  console.log("  GET  /api/test-file - Read today's test file");
+  console.log("  GET  /api/settings - Read saved UI settings");
+  console.log("  POST /api/settings - Save UI settings");
 });
 
 module.exports = app;

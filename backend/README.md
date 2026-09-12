@@ -70,13 +70,16 @@ Open your browser and navigate to:
 
 **POST** `/api/send-sms`
 
-Send an SMS message via Twilio.
+Send an SMS message via Twilio. `to` is normalized before sending:
+formatting characters (dashes, parens, spaces) are stripped, and a bare
+10-digit number is assumed to be a US number and gets `+1` prepended, so
+spreadsheet values like `203-536-3134` work without pre-formatting.
 
 **Request Body:**
 
 ```json
 {
-  "to": "+1234567890",
+  "to": "203-536-3134",
   "message": "Your personalized message here"
 }
 ```
@@ -116,6 +119,61 @@ Send an email message via Nodemailer.
   "message": "Email sent successfully"
 }
 ```
+
+### Test File Endpoints
+
+**POST** `/api/send-test-file`
+
+Appends a message to today's `test_output/test_send_<YYYY-MM-DD>.txt`
+file instead of actually sending it. Used by the browser's "Test File"
+mode.
+
+**Request Body:**
+
+```json
+{
+  "name": "Greg M",
+  "contact": "203-536-3134",
+  "sendBy": "phone",
+  "message": "Your personalized message here"
+}
+```
+
+**Response:**
+
+```json
+{
+  "success": true,
+  "filePath": "/absolute/path/to/test_output/test_send_2026-09-12.txt",
+  "message": "Message written to test file"
+}
+```
+
+**GET** `/api/test-file`
+
+Reads back today's test-file output so the browser's "View Test File"
+toggle can display it. Returns `{ "exists": false, "content": "" }` if
+nothing has been written yet today.
+
+**Response:**
+
+```json
+{
+  "exists": true,
+  "filePath": "/absolute/path/to/test_output/test_send_2026-09-12.txt",
+  "content": "..."
+}
+```
+
+### Settings Endpoints
+
+**GET** `/api/settings` / **POST** `/api/settings`
+
+Reads/writes `backend/settings.json` (gitignored, per-machine), used by
+the browser's "Save Settings" button to persist Mode, Max notifications,
+Test phone, and Test email between sessions. POST accepts and stores
+whatever JSON object is sent as the request body; GET returns `{}` if the
+file doesn't exist yet.
 
 ### Health Check
 
