@@ -122,6 +122,86 @@
         font-size: 1.2rem;
       }
 
+      .switch {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        cursor: pointer;
+        font-size: 0.85rem;
+        font-weight: 600;
+        color: var(--text-muted);
+        user-select: none;
+      }
+
+      .switch--section .switch-label {
+        font-family: var(--font-display);
+        font-weight: 600;
+        font-size: 1.2rem;
+        color: var(--text);
+      }
+
+      .switch input {
+        position: absolute;
+        opacity: 0;
+        width: 0;
+        height: 0;
+      }
+
+      .switch-track {
+        position: relative;
+        width: 36px;
+        height: 20px;
+        flex: none;
+        background: var(--surface-2);
+        border: 1px solid var(--border);
+        border-radius: 999px;
+        transition: background-color 0.15s ease, border-color 0.15s ease;
+      }
+
+      .switch-thumb {
+        position: absolute;
+        top: 1px;
+        left: 1px;
+        width: 16px;
+        height: 16px;
+        border-radius: 50%;
+        background: var(--surface);
+        box-shadow: 0 1px 2px var(--shadow);
+        transition: transform 0.15s ease;
+      }
+
+      .switch input:checked + .switch-track {
+        background: var(--accent-strong);
+        border-color: var(--accent-strong);
+      }
+
+      .switch input:checked + .switch-track .switch-thumb {
+        transform: translateX(16px);
+        background: var(--on-accent);
+      }
+
+      .switch input:focus-visible + .switch-track {
+        outline: 2px solid var(--focus);
+        outline-offset: 2px;
+      }
+
+      @media (prefers-reduced-motion: reduce) {
+        .switch-track,
+        .switch-thumb {
+          transition: none;
+        }
+      }
+
+      .collapsible-body {
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+      }
+
+      .collapsible-body[hidden] {
+        display: none;
+      }
+
       .card .hint {
         margin: -8px 0 0;
         color: var(--text-muted);
@@ -204,6 +284,16 @@
       }
 
       .chip--skip {
+        background: var(--surface-2);
+        color: var(--text-muted);
+      }
+
+      .chip--sent {
+        background: var(--info-bg);
+        color: var(--info);
+      }
+
+      .chip--failed {
         background: var(--danger-bg);
         color: var(--danger);
       }
@@ -371,6 +461,68 @@
           grid-template-columns: 1fr;
         }
       }
+
+      .btn-sm {
+        padding: 5px 12px;
+        font-size: 0.8rem;
+      }
+
+      #statusTotalsRow td {
+        font-weight: 600;
+        color: var(--text-muted);
+        background: var(--surface-2);
+        white-space: normal;
+      }
+
+      .modal-overlay {
+        position: fixed;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.45);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 16px;
+        z-index: 10;
+      }
+
+      .modal-overlay[hidden] {
+        display: none;
+      }
+
+      .modal-box {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        padding: 20px;
+        max-width: 480px;
+        width: 100%;
+        max-height: 80vh;
+        overflow-y: auto;
+        box-shadow: 0 8px 24px var(--shadow);
+      }
+
+      .modal-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        margin-bottom: 12px;
+      }
+
+      .modal-header h3 {
+        margin: 0;
+        font-family: var(--font-display);
+        font-weight: 600;
+        font-size: 1.1rem;
+      }
+
+      .modal-message {
+        margin: 0;
+        white-space: pre-wrap;
+        font-family: var(--font-mono);
+        font-size: 0.9rem;
+        color: var(--text);
+      }
     </style>
   </head>
   <body>
@@ -386,6 +538,10 @@
 
       <section class="card">
         <h2>1. Upload the roster</h2>
+        <p class="hint">
+          <code>MergeList.xlsx</code> is pre-selected below - click "Load
+          File" to use it, or pick a different file first.
+        </p>
         <div class="form-group">
           <label for="excelFile">Excel file (.xlsx) with a "List" sheet:</label>
           <input type="file" id="excelFile" accept=".xlsx,.xls" />
@@ -396,69 +552,97 @@
       </section>
 
       <section id="dataGridSection" class="card" style="display: none">
-        <h2>2. Loaded contacts</h2>
+        <h2>2. Contacts</h2>
         <p id="gridSummary" class="grid-summary"></p>
         <div class="grid-container">
           <div id="dataGrid"></div>
         </div>
-      </section>
 
-      <section class="card">
-        <h2>3. Settings</h2>
-        <div class="form-grid">
-          <div class="form-group">
-            <label for="modeSelect">Mode:</label>
-            <select id="modeSelect">
-              <option value="preview">Preview Only</option>
-              <option value="testfile">Test File (write to .txt)</option>
-              <option value="testphone">Test SMS - all to one number</option>
-              <option value="testemail">Test Email - all to one address</option>
-              <option value="email">Send Email</option>
-              <option value="sms">Send SMS</option>
-            </select>
-          </div>
-          <div class="form-group">
-            <label for="maxNotifies">Max notifications:</label>
-            <input type="number" id="maxNotifies" value="1000000" min="1" />
-          </div>
-          <div class="form-group">
-            <label for="testPhone">Test phone (overrides recipients for SMS mode):</label>
-            <input type="tel" id="testPhone" placeholder="+1234567890" />
-          </div>
-          <div class="form-group">
-            <label for="testEmail">Test email (overrides recipients for Email mode):</label>
-            <input type="email" id="testEmail" placeholder="test@example.com" />
+        <div class="form-group">
+          <label for="modeSelect">Mode:</label>
+          <select id="modeSelect">
+            <option value="preview">Preview Only</option>
+            <option value="testfile">Test File (write to .txt)</option>
+            <option value="testphone">Test SMS - all to one number</option>
+            <option value="testemail">Test Email - all to one address</option>
+            <option value="email">Send Email</option>
+            <option value="sms">Send SMS</option>
+          </select>
+        </div>
+
+        <label class="switch switch--section">
+          <input type="checkbox" id="settingsToggle" onchange="toggleSettingsVisibility()" />
+          <span class="switch-track"><span class="switch-thumb"></span></span>
+          <span class="switch-label">More settings</span>
+        </label>
+        <div id="settingsBody" class="collapsible-body" hidden>
+          <div class="form-grid">
+            <div class="form-group">
+              <label for="maxNotifies">Max notifications:</label>
+              <input type="number" id="maxNotifies" value="1000000" min="1" />
+            </div>
+            <div class="form-group">
+              <label for="testPhone">Test phone (overrides recipients for SMS mode):</label>
+              <input type="tel" id="testPhone" placeholder="+1234567890" />
+            </div>
+            <div class="form-group">
+              <label for="testEmail">Test email (overrides recipients for Email mode):</label>
+              <input type="email" id="testEmail" placeholder="test@example.com" />
+            </div>
           </div>
         </div>
-      </section>
-
-      <section class="card">
-        <h2>4. Message template</h2>
-        <p class="hint">
-          Placeholders: <code>&lt;FirstName&gt;</code>
-          <code>&lt;LastName&gt;</code> <code>&lt;CelebrationDate&gt;</code>
-          <code>&lt;Sobriety&gt;</code> <code>&lt;SobrietyUnit&gt;</code>
-        </p>
-        <textarea
-          id="messageTemplate"
-          class="template-textarea"
-          placeholder="Enter your message template here, or load an Excel file with a Template sheet..."
-        ></textarea>
       </section>
 
       <div class="actions">
         <button class="btn btn-primary" onclick="processContacts()" id="processBtn" disabled>
           Process Contacts
         </button>
+        <button class="btn btn-ghost" onclick="resetContactStatus()">Reset Status</button>
         <button class="btn btn-ghost" onclick="clearLog()">Clear Log</button>
         <button class="btn btn-ghost" onclick="downloadLog()">Download Log</button>
       </div>
 
       <section class="card">
-        <h2>Results</h2>
-        <div id="statusContainer" class="status-stack"></div>
-        <div class="log-output" id="logOutput"></div>
+        <label class="switch switch--section">
+          <input type="checkbox" id="templateToggle" onchange="toggleTemplateVisibility()" />
+          <span class="switch-track"><span class="switch-thumb"></span></span>
+          <span class="switch-label">3. Show template</span>
+        </label>
+        <div id="templateBody" class="collapsible-body" hidden>
+          <p class="hint">
+            Placeholders: <code>&lt;FirstName&gt;</code>
+            <code>&lt;LastName&gt;</code> <code>&lt;CelebrationDate&gt;</code>
+            <code>&lt;Sobriety&gt;</code> <code>&lt;SobrietyUnit&gt;</code>
+          </p>
+          <textarea
+            id="messageTemplate"
+            class="template-textarea"
+            placeholder="Enter your message template here, or load an Excel file with a Template sheet..."
+          ></textarea>
+        </div>
       </section>
+
+      <section class="card">
+        <label class="switch switch--section">
+          <input type="checkbox" id="logToggle" onchange="toggleLogVisibility()" />
+          <span class="switch-track"><span class="switch-thumb"></span></span>
+          <span class="switch-label">View Log</span>
+        </label>
+        <div id="logBody" class="collapsible-body" hidden>
+          <div id="statusContainer" class="status-stack"></div>
+          <div class="log-output" id="logOutput"></div>
+        </div>
+      </section>
+    </div>
+
+    <div id="msgPreviewModal" class="modal-overlay" hidden onclick="if (event.target === this) closeMsgPreview()">
+      <div class="modal-box">
+        <div class="modal-header">
+          <h3 id="msgPreviewName"></h3>
+          <button class="btn btn-ghost btn-sm" onclick="closeMsgPreview()">Close</button>
+        </div>
+        <pre id="msgPreviewText" class="modal-message"></pre>
+      </div>
     </div>
 
     <script>
@@ -488,6 +672,7 @@
       let spreadsheetData = null;
       let memberCount = 0;
       let logMessages = [];
+      let currentContacts = [];
 
       // Utility functions
       function classifyLogLine(message) {
@@ -525,6 +710,21 @@
             statusDiv.parentNode.removeChild(statusDiv);
           }
         }, 5000);
+      }
+
+      function toggleTemplateVisibility() {
+        const show = document.getElementById("templateToggle").checked;
+        document.getElementById("templateBody").hidden = !show;
+      }
+
+      function toggleLogVisibility() {
+        const show = document.getElementById("logToggle").checked;
+        document.getElementById("logBody").hidden = !show;
+      }
+
+      function toggleSettingsVisibility() {
+        const show = document.getElementById("settingsToggle").checked;
+        document.getElementById("settingsBody").hidden = !show;
       }
 
       function clearLog() {
@@ -579,9 +779,10 @@
           "email",
           "Sobriety",
           "SobrietyUnit",
-          "CelebrationDate",
         ];
-        const numericColumns = new Set(["Sobriety", "CelebrationDate"]);
+        const numericColumns = new Set(["Sobriety"]);
+
+        currentContacts = rows;
 
         let validCount = 0;
         rows.forEach((r) => {
@@ -593,30 +794,133 @@
 
         let html = '<table class="data-grid"><thead><tr><th>Status</th>';
         columns.forEach((col) => { html += `<th>${col}</th>`; });
-        html += "</tr></thead><tbody>";
+        html += "<th>Message</th></tr></thead><tbody>";
 
-        rows.forEach((row) => {
+        rows.forEach((row, rowIndex) => {
           const valid = checkMember(Object.assign({}, row)) !== null;
-          html += `<tr class="${valid ? "" : "row-skip"}">`;
-          html += `<td>${
+          html += `<tr class="${valid ? "" : "row-skip"}" data-row="${rowIndex}">`;
+          html += `<td class="status-cell">${
             valid
               ? '<span class="chip chip--ready">Ready</span>'
               : '<span class="chip chip--skip">Skip</span>'
           }</td>`;
           columns.forEach((col) => {
             let val = row[col] != null ? row[col] : "";
-            if (col === "CelebrationDate" && typeof val === "number") {
-              val = formatExcelDate(val);
-            }
             const cellClass = numericColumns.has(col) ? ' class="num-cell"' : "";
             html += `<td${cellClass}>${String(val)}</td>`;
           });
+          html += `<td>${
+            valid
+              ? `<button class="btn btn-ghost btn-sm" onclick="viewMessage(${rowIndex})">View</button>`
+              : ""
+          }</td>`;
           html += "</tr>";
         });
 
-        html += "</tbody></table>";
+        html += `</tbody><tfoot><tr id="statusTotalsRow"><td colspan="${columns.length + 2}"></td></tr></tfoot></table>`;
         document.getElementById("dataGrid").innerHTML = html;
         section.style.display = "block";
+        renderStatusTotals();
+      }
+
+      // Update a single contact row's status chip while processing runs
+      function setRowStatus(rowIndex, label, variant) {
+        const row = document.querySelector(`#dataGrid tr[data-row="${rowIndex}"]`);
+        if (!row) return;
+        const cell = row.querySelector(".status-cell");
+        if (!cell) return;
+        cell.innerHTML = `<span class="chip chip--${variant}">${label}</span>`;
+        renderStatusTotals();
+      }
+
+      // Tallies the status chips currently shown and writes them into the
+      // grid's totals row
+      function renderStatusTotals() {
+        const totalsRow = document.getElementById("statusTotalsRow");
+        if (!totalsRow) return;
+
+        const counts = {};
+        document.querySelectorAll("#dataGrid .status-cell .chip").forEach((chip) => {
+          counts[chip.textContent] = (counts[chip.textContent] || 0) + 1;
+        });
+
+        const summary = Object.entries(counts)
+          .map(([label, count]) => `${label}: ${count}`)
+          .join("   ");
+
+        totalsRow.querySelector("td").textContent = summary || "No contacts loaded";
+      }
+
+      // Shows what the message would look like for one contact, using the
+      // current template
+      function viewMessage(rowIndex) {
+        const raw = currentContacts[rowIndex];
+        if (!raw) return;
+
+        const member = checkMember(Object.assign({}, raw));
+        if (!member) return;
+
+        const template = document.getElementById("messageTemplate").value;
+        if (!template.trim()) {
+          addStatus("Enter a message template first", "error");
+          return;
+        }
+
+        const celebrationDate = raw["CelebrationDate"]
+          ? formatExcelDate(raw["CelebrationDate"])
+          : "the celebration date";
+
+        const message = substituteTemplate(member, template, celebrationDate);
+        const name = `${member["FirstName"]} ${member["LastName (initial)"] || ""}`.trim();
+        showMsgPreview(name, message);
+      }
+
+      function showMsgPreview(name, message) {
+        document.getElementById("msgPreviewName").textContent = name;
+        document.getElementById("msgPreviewText").textContent = message;
+        document.getElementById("msgPreviewModal").hidden = false;
+      }
+
+      function closeMsgPreview() {
+        document.getElementById("msgPreviewModal").hidden = true;
+      }
+
+      // Puts every contact row back to its original Ready/Skip status
+      function resetContactStatus() {
+        if (!spreadsheetData) {
+          addStatus("Load a file first", "error");
+          return;
+        }
+        renderGrid(spreadsheetData);
+        addStatus("Contact statuses reset", "info");
+      }
+
+      // Parses a workbook from raw bytes and wires it up as the active roster
+      function loadWorkbookFromBytes(data, sourceLabel) {
+        try {
+          const workbook = XLSX.read(data, { type: "array" });
+          spreadsheetData = workbook;
+
+          log(`Successfully loaded Excel file: ${sourceLabel}`);
+          log(`Available sheets: ${workbook.SheetNames.join(", ")}`);
+
+          // Load template from Template sheet (stored in cell A1)
+          const templateSheet = workbook.Sheets["Template"];
+          if (templateSheet && templateSheet.A1) {
+            const rawTemplate = templateSheet.A1.v;
+            document.getElementById("messageTemplate").value =
+              rawTemplate.replace(/\r/g, "");
+            log("Template loaded from Excel Template sheet");
+          }
+
+          renderGrid(workbook);
+
+          document.getElementById("processBtn").disabled = false;
+          addStatus("Excel file loaded successfully!", "success");
+        } catch (error) {
+          log(`Error loading Excel file: ${error.message}`);
+          addStatus("Error loading Excel file", "error");
+        }
       }
 
       // File handling functions
@@ -631,33 +935,31 @@
 
         const reader = new FileReader();
         reader.onload = function (e) {
-          try {
-            const data = new Uint8Array(e.target.result);
-            const workbook = XLSX.read(data, { type: "array" });
-            spreadsheetData = workbook;
-
-            log(`Successfully loaded Excel file: ${file.name}`);
-            log(`Available sheets: ${workbook.SheetNames.join(", ")}`);
-
-            // Load template from Template sheet (stored in cell A1)
-            const templateSheet = workbook.Sheets["Template"];
-            if (templateSheet && templateSheet.A1) {
-              const rawTemplate = templateSheet.A1.v;
-              document.getElementById("messageTemplate").value =
-                rawTemplate.replace(/\r/g, "");
-              log("Template loaded from Excel Template sheet");
-            }
-
-            renderGrid(workbook);
-
-            document.getElementById("processBtn").disabled = false;
-            addStatus("Excel file loaded successfully!", "success");
-          } catch (error) {
-            log(`Error loading Excel file: ${error.message}`);
-            addStatus("Error loading Excel file", "error");
-          }
+          loadWorkbookFromBytes(new Uint8Array(e.target.result), file.name);
         };
         reader.readAsArrayBuffer(file);
+      }
+
+      // Pre-fills the file picker with MergeList.xlsx from the server, if
+      // present, so it's ready for the user to click "Load File". Does not
+      // parse or load it - that still requires an explicit click.
+      async function preselectDefaultFile() {
+        const defaultFileName = "MergeList.xlsx";
+        try {
+          const response = await fetch(`/${defaultFileName}`);
+          if (!response.ok) {
+            log(`No default ${defaultFileName} found on the server`);
+            return;
+          }
+          const blob = await response.blob();
+          const file = new File([blob], defaultFileName, { type: blob.type });
+          const dataTransfer = new DataTransfer();
+          dataTransfer.items.add(file);
+          document.getElementById("excelFile").files = dataTransfer.files;
+          log(`${defaultFileName} selected - click "Load File" to load it`);
+        } catch (error) {
+          log(`Could not preselect ${defaultFileName}: ${error.message}`);
+        }
       }
 
       // Member validation function
@@ -726,11 +1028,13 @@
 
           if (result.success) {
             log(`  Written to: ${result.filePath}`);
-          } else {
-            log(`  FAILED: File write failed: ${result.error}`);
+            return true;
           }
+          log(`  FAILED: File write failed: ${result.error}`);
+          return false;
         } catch (error) {
           log(`  FAILED: Test file error: ${error.message}`);
+          return false;
         }
       }
 
@@ -759,14 +1063,17 @@
 
           if (result.success) {
             log(`SMS sent OK. Message ID: ${result.messageId}`);
-          } else {
-            log(`SMS FAILED: ${result.error}`);
+            log(`*****************************************\n`);
+            return true;
           }
+          log(`SMS FAILED: ${result.error}`);
+          log(`*****************************************\n`);
+          return false;
         } catch (error) {
           log(`SMS ERROR: ${error.message}`);
+          log(`*****************************************\n`);
+          return false;
         }
-
-        log(`*****************************************\n`);
       }
 
       // Browser-compatible email sending with backend API
@@ -796,14 +1103,17 @@
 
           if (result.success) {
             log(`Email sent OK. Message ID: ${result.messageId}`);
-          } else {
-            log(`Email FAILED: ${result.error}`);
+            log(`*******************************************\n`);
+            return true;
           }
+          log(`Email FAILED: ${result.error}`);
+          log(`*******************************************\n`);
+          return false;
         } catch (error) {
           log(`Email ERROR: ${error.message}`);
+          log(`*******************************************\n`);
+          return false;
         }
-
-        log(`*******************************************\n`);
       }
 
       // Main processing function
@@ -849,7 +1159,8 @@
           let processedCount = 0;
           let skippedCount = 0;
 
-          for (const member of celebrantList) {
+          for (let rowIndex = 0; rowIndex < celebrantList.length; rowIndex++) {
+            const member = celebrantList[rowIndex];
             memberCount++;
 
             if (memberCount === 1 && member["CelebrationDate"]) {
@@ -869,6 +1180,9 @@
                 celebrationDate
               );
 
+              let statusLabel = null;
+              let sendOk = true;
+
               if (mode === "preview") {
                 log(`\n--- PREVIEW MESSAGE ${memberCount} ---`);
                 log(
@@ -886,25 +1200,39 @@
                 );
                 log(`Message: ${sendMsg}`);
                 log(`--- END PREVIEW ---\n`);
+                statusLabel = "Previewed";
               } else if (mode === "testphone") {
-                await sendTextMsg(sendMsg, "");
+                sendOk = await sendTextMsg(sendMsg, "");
                 processedCount++;
+                statusLabel = "Test Text";
               } else if (mode === "testemail") {
-                await sendEmailMsg(sendMsg, "");
+                sendOk = await sendEmailMsg(sendMsg, "");
                 processedCount++;
+                statusLabel = "Test Email";
               } else if (mode === "testfile") {
                 log(`Writing message for: ${validMember["FirstName"]} (${validMember["SendBy"]})`);
-                await sendTestFileMsg(sendMsg, validMember);
+                sendOk = await sendTestFileMsg(sendMsg, validMember);
                 processedCount++;
+                statusLabel = "Test File";
               } else if (mode === "sms" && validMember["SendBy"] === "phone") {
-                await sendTextMsg(sendMsg, validMember["Phone/email"]);
+                sendOk = await sendTextMsg(sendMsg, validMember["Phone/email"]);
                 processedCount++;
+                statusLabel = "Text";
               } else if (
                 mode === "email" &&
                 validMember["SendBy"] === "email"
               ) {
-                await sendEmailMsg(sendMsg, validMember["email"]);
+                sendOk = await sendEmailMsg(sendMsg, validMember["email"]);
                 processedCount++;
+                statusLabel = "Email";
+              }
+
+              if (statusLabel) {
+                setRowStatus(
+                  rowIndex,
+                  sendOk ? statusLabel : "Failed",
+                  sendOk ? "sent" : "failed"
+                );
               }
 
               if (mode !== "preview") {
@@ -975,8 +1303,8 @@
 
       document.addEventListener("DOMContentLoaded", function () {
         log("Sheets Merge Sender Browser Version initialized");
-        log("Please upload an Excel file to begin");
         checkBackendStatus();
+        preselectDefaultFile();
       });
     </script>
   </body>
