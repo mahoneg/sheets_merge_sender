@@ -218,6 +218,24 @@ app.post("/api/send-test-file", (req, res) => {
   }
 });
 
+// Reads today's test-file output so the browser can display it
+app.get("/api/test-file", (req, res) => {
+  try {
+    const dateStr = new Date().toISOString().slice(0, 10);
+    const outputFile = path.join(__dirname, "test_output", `test_send_${dateStr}.txt`);
+
+    if (!fs.existsSync(outputFile)) {
+      return res.json({ exists: false, filePath: outputFile, content: "" });
+    }
+
+    const content = fs.readFileSync(outputFile, "utf8");
+    res.json({ exists: true, filePath: outputFile, content });
+  } catch (error) {
+    console.error("Failed to read test file", error);
+    res.status(500).json({ error: "Failed to read test file", details: error.message });
+  }
+});
+
 // Health check endpoint
 app.get("/api/health", (req, res) => {
   res.json({

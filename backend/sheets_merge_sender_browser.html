@@ -140,6 +140,12 @@
         color: var(--text);
       }
 
+      .switch-row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 24px;
+      }
+
       .switch input {
         position: absolute;
         opacity: 0;
@@ -537,6 +543,7 @@
       .modal-actions {
         display: flex;
         justify-content: flex-end;
+        gap: 12px;
         margin-top: 16px;
       }
     </style>
@@ -640,14 +647,24 @@
       </section>
 
       <section class="card">
-        <label class="switch switch--section">
-          <input type="checkbox" id="logToggle" onchange="toggleLogVisibility()" />
-          <span class="switch-track"><span class="switch-thumb"></span></span>
-          <span class="switch-label">View Log</span>
-        </label>
+        <div class="switch-row">
+          <label class="switch switch--section">
+            <input type="checkbox" id="logToggle" onchange="toggleLogVisibility()" />
+            <span class="switch-track"><span class="switch-thumb"></span></span>
+            <span class="switch-label">View Log</span>
+          </label>
+          <label class="switch switch--section">
+            <input type="checkbox" id="testFileToggle" onchange="toggleTestFileVisibility()" />
+            <span class="switch-track"><span class="switch-thumb"></span></span>
+            <span class="switch-label">View Test File</span>
+          </label>
+        </div>
         <div id="logBody" class="collapsible-body" hidden>
           <div id="statusContainer" class="status-stack"></div>
           <div class="log-output" id="logOutput"></div>
+        </div>
+        <div id="testFileBody" class="collapsible-body" hidden>
+          <pre class="log-output" id="testFileOutput"></pre>
         </div>
       </section>
     </div>
@@ -743,6 +760,43 @@
       function toggleLogVisibility() {
         const show = document.getElementById("logToggle").checked;
         document.getElementById("logBody").hidden = !show;
+
+        if (show) {
+          document.getElementById("testFileToggle").checked = false;
+          document.getElementById("testFileBody").hidden = true;
+        }
+      }
+
+      function toggleTestFileVisibility() {
+        const show = document.getElementById("testFileToggle").checked;
+        document.getElementById("testFileBody").hidden = !show;
+
+        if (show) {
+          document.getElementById("logToggle").checked = false;
+          document.getElementById("logBody").hidden = true;
+          loadTestFileContent();
+        }
+      }
+
+      // Fetches today's test-file output from the server for display
+      async function loadTestFileContent() {
+        const output = document.getElementById("testFileOutput");
+        output.textContent = "Loading...";
+
+        try {
+          const response = await fetch("/api/test-file");
+          const result = await response.json();
+
+          if (!result.exists) {
+            output.textContent =
+              "No test file for today yet. Run Process Contacts in Test File mode first.";
+            return;
+          }
+
+          output.textContent = result.content;
+        } catch (error) {
+          output.textContent = `Could not load test file: ${error.message}`;
+        }
       }
 
       function toggleSettingsVisibility() {
@@ -926,7 +980,7 @@
         if (cell) cell.innerHTML = `<span class="chip chip--${variant}">${label}</span>`;
 
         if (variant === "sent" || variant === "failed") {
-          lastSentTimes[rowIndex] = new Date().toLocaleString();
+          lastSentTimes[rowIndex] = new Date().toLocaleTimeString();
           const lastSentCell = row.querySelector(".last-sent-cell");
           if (lastSentCell) lastSentCell.textContent = lastSentTimes[rowIndex];
         }

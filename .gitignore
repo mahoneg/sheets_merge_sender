@@ -145,3 +145,6 @@ old_merges
 
 # saved local UI settings (per-machine, not shared)
 backend/settings.json
+
+# test-mode message output (contains real contact info)
+backend/test_output/
