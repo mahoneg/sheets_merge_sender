@@ -597,12 +597,15 @@
             </div>
             <div class="form-group">
               <label for="testPhone">Test phone (overrides recipients for SMS mode):</label>
-              <input type="tel" id="testPhone" placeholder="+1234567890" />
+              <input type="tel" id="testPhone" placeholder="+1234567890" oninput="updateModeOptionLabels()" />
             </div>
             <div class="form-group">
               <label for="testEmail">Test email (overrides recipients for Email mode):</label>
-              <input type="email" id="testEmail" placeholder="test@example.com" />
+              <input type="email" id="testEmail" placeholder="test@example.com" oninput="updateModeOptionLabels()" />
             </div>
+          </div>
+          <div>
+            <button class="btn btn-ghost" onclick="saveSettings()">Save Settings</button>
           </div>
         </div>
       </section>
@@ -658,6 +661,7 @@
         <p id="msgPreviewChannel" class="hint"></p>
         <pre id="msgPreviewText" class="modal-message"></pre>
         <div class="modal-actions">
+          <button class="btn btn-ghost" onclick="resetContactStatus()">Reset Status</button>
           <button class="btn btn-primary" onclick="sendPreviewMessage()">Send</button>
         </div>
       </div>
@@ -691,6 +695,7 @@
       let memberCount = 0;
       let logMessages = [];
       let currentContacts = [];
+      let lastSentTimes = {};
 
       // Utility functions
       function classifyLogLine(message) {
@@ -743,6 +748,78 @@
       function toggleSettingsVisibility() {
         const show = document.getElementById("settingsToggle").checked;
         document.getElementById("settingsBody").hidden = !show;
+      }
+
+      // Shows the actual configured test phone/email in the mode dropdown
+      // instead of generic "one number"/"one address" text
+      function updateModeOptionLabels() {
+        const testPhone = document.getElementById("testPhone").value.trim();
+        const testEmail = document.getElementById("testEmail").value.trim();
+        const phoneOption = document.querySelector('#modeSelect option[value="testphone"]');
+        const emailOption = document.querySelector('#modeSelect option[value="testemail"]');
+
+        if (phoneOption) {
+          phoneOption.textContent = testPhone
+            ? `Test SMS - all to ${testPhone}`
+            : "Test SMS - all to one number";
+        }
+        if (emailOption) {
+          emailOption.textContent = testEmail
+            ? `Test Email - all to ${testEmail}`
+            : "Test Email - all to one address";
+        }
+      }
+
+      // Saves Mode/Max notifications/Test phone/Test email to settings.json
+      // on the server, so they're restored next time the app is opened
+      async function saveSettings() {
+        const settings = {
+          mode: document.getElementById("modeSelect").value,
+          maxNotifies: document.getElementById("maxNotifies").value,
+          testPhone: document.getElementById("testPhone").value,
+          testEmail: document.getElementById("testEmail").value,
+        };
+
+        try {
+          const response = await fetch("/api/settings", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(settings),
+          });
+          const result = await response.json();
+
+          if (result.success) {
+            log("Settings saved to settings.json");
+            addStatus("Settings saved", "success");
+          } else {
+            log(`FAILED: Save settings failed: ${result.error}`);
+            addStatus("Failed to save settings", "error");
+          }
+        } catch (error) {
+          log(`FAILED: Save settings error: ${error.message}`);
+          addStatus("Failed to save settings", "error");
+        }
+      }
+
+      // Restores previously saved settings, if any, on startup
+      async function loadSettings() {
+        try {
+          const response = await fetch("/api/settings");
+          if (!response.ok) return;
+
+          const settings = await response.json();
+          if (settings.mode) document.getElementById("modeSelect").value = settings.mode;
+          if (settings.maxNotifies) document.getElementById("maxNotifies").value = settings.maxNotifies;
+          if (settings.testPhone) document.getElementById("testPhone").value = settings.testPhone;
+          if (settings.testEmail) document.getElementById("testEmail").value = settings.testEmail;
+          updateModeOptionLabels();
+
+          if (Object.keys(settings).length > 0) {
+            log("Loaded saved settings from settings.json");
+          }
+        } catch (error) {
+          log(`Could not load saved settings: ${error.message}`);
+        }
       }
 
       function clearLog() {
@@ -798,13 +875,14 @@
           "Sobriety",
           "SobrietyUnit",
         ];
+        const columnLabels = { "Phone/email": "Phone" };
         const numericColumns = new Set(["Sobriety"]);
 
         currentContacts = rows;
 
         let html = '<table class="data-grid"><thead><tr><th>Status</th>';
-        columns.forEach((col) => { html += `<th>${col}</th>`; });
-        html += "<th>Message</th></tr></thead><tbody>";
+        columns.forEach((col) => { html += `<th>${columnLabels[col] || col}</th>`; });
+        html += "<th>Last Sent</th><th>Message</th></tr></thead><tbody>";
 
         rows.forEach((row, rowIndex) => {
           const checkedMember = checkMember(Object.assign({}, row));
@@ -825,6 +903,7 @@
             const content = isSendColumn ? `<strong>${String(val)}</strong>` : String(val);
             html += `<td${cellClass}>${content}</td>`;
           });
+          html += `<td class="last-sent-cell num-cell">${lastSentTimes[rowIndex] || ""}</td>`;
           html += `<td>${
             valid
               ? `<button class="btn btn-ghost btn-sm" onclick="viewMessage(${rowIndex})">View</button>`
@@ -833,7 +912,7 @@
           html += "</tr>";
         });
 
-        html += `</tbody><tfoot><tr id="statusTotalsRow"><td colspan="${columns.length + 2}"></td></tr></tfoot></table>`;
+        html += `</tbody><tfoot><tr id="statusTotalsRow"><td colspan="${columns.length + 3}"></td></tr></tfoot></table>`;
         document.getElementById("dataGrid").innerHTML = html;
         section.style.display = "block";
         renderStatusTotals();
@@ -844,8 +923,14 @@
         const row = document.querySelector(`#dataGrid tr[data-row="${rowIndex}"]`);
         if (!row) return;
         const cell = row.querySelector(".status-cell");
-        if (!cell) return;
-        cell.innerHTML = `<span class="chip chip--${variant}">${label}</span>`;
+        if (cell) cell.innerHTML = `<span class="chip chip--${variant}">${label}</span>`;
+
+        if (variant === "sent" || variant === "failed") {
+          lastSentTimes[rowIndex] = new Date().toLocaleString();
+          const lastSentCell = row.querySelector(".last-sent-cell");
+          if (lastSentCell) lastSentCell.textContent = lastSentTimes[rowIndex];
+        }
+
         renderStatusTotals();
       }
 
@@ -966,6 +1051,7 @@
         try {
           const workbook = XLSX.read(data, { type: "array" });
           spreadsheetData = workbook;
+          lastSentTimes = {};
 
           log(`Successfully loaded Excel file: ${sourceLabel}`);
           log(`Available sheets: ${workbook.SheetNames.join(", ")}`);
@@ -1224,6 +1310,7 @@
           memberCount = 0;
           let processedCount = 0;
           let skippedCount = 0;
+          let alreadyDoneCount = 0;
 
           for (let rowIndex = 0; rowIndex < celebrantList.length; rowIndex++) {
             const member = celebrantList[rowIndex];
@@ -1236,6 +1323,18 @@
 
             const validMember = checkMember(member);
             if (validMember) {
+              const currentChip = document.querySelector(
+                `#dataGrid tr[data-row="${rowIndex}"] .status-cell .chip`
+              );
+              const currentStatus = currentChip ? currentChip.textContent : "Ready";
+              if (currentStatus !== "Ready") {
+                alreadyDoneCount++;
+                log(
+                  `Skipping member ${memberCount}: ${validMember["FirstName"]} - already ${currentStatus}`
+                );
+                continue;
+              }
+
               const celebrationDate = member["CelebrationDate"]
                 ? formatExcelDate(member["CelebrationDate"])
                 : "the celebration date";
@@ -1322,11 +1421,12 @@
           log(`Total contacts: ${celebrantList.length}`);
           log(`Processed: ${processedCount}`);
           log(`Skipped: ${skippedCount}`);
+          log(`Already done: ${alreadyDoneCount}`);
           log(`Mode: ${mode.toUpperCase()}`);
           log(`===============================\n`);
 
           addStatus(
-            `Processing complete! Processed: ${processedCount}, Skipped: ${skippedCount}`,
+            `Processing complete! Processed: ${processedCount}, Skipped: ${skippedCount}, Already done: ${alreadyDoneCount}`,
             "success"
           );
         } catch (error) {
@@ -1368,6 +1468,7 @@
         log("Sheets Merge Sender Browser Version initialized");
         checkBackendStatus();
         preselectDefaultFile();
+        loadSettings();
       });
     </script>
   </body>

@@ -142,3 +142,6 @@ dist
 # storing secrets - creds here
 keys
 old_merges
+
+# saved local UI settings (per-machine, not shared)
+backend/settings.json

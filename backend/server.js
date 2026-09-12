@@ -241,6 +241,32 @@ app.get("/api/config", (req, res) => {
   });
 });
 
+// Saved UI settings (mode, max notifications, test phone/email)
+const SETTINGS_FILE = path.join(__dirname, "settings.json");
+
+app.get("/api/settings", (req, res) => {
+  try {
+    if (!fs.existsSync(SETTINGS_FILE)) {
+      return res.json({});
+    }
+    const settings = JSON.parse(fs.readFileSync(SETTINGS_FILE, "utf8"));
+    res.json(settings);
+  } catch (error) {
+    console.error("Failed to read settings.json", error);
+    res.status(500).json({ error: "Failed to read settings", details: error.message });
+  }
+});
+
+app.post("/api/settings", (req, res) => {
+  try {
+    fs.writeFileSync(SETTINGS_FILE, JSON.stringify(req.body, null, 2), "utf8");
+    res.json({ success: true });
+  } catch (error) {
+    console.error("Failed to write settings.json", error);
+    res.status(500).json({ error: "Failed to save settings", details: error.message });
+  }
+});
+
 // Error handling middleware
 app.use((error, req, res, next) => {
   console.error("Server error:", error);
