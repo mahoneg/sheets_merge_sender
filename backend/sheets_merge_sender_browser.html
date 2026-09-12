@@ -216,12 +216,6 @@
         font-size: 0.85em;
       }
 
-      .grid-summary {
-        margin: -8px 0 0;
-        font-weight: 600;
-        color: var(--text-muted);
-      }
-
       .grid-container {
         overflow-x: auto;
         max-height: 340px;
@@ -575,7 +569,6 @@
 
       <section id="dataGridSection" class="card" style="display: none">
         <h2>2. Contacts</h2>
-        <p id="gridSummary" class="grid-summary"></p>
         <div class="grid-container">
           <div id="dataGrid"></div>
         </div>
@@ -627,7 +620,7 @@
         <label class="switch switch--section">
           <input type="checkbox" id="templateToggle" onchange="toggleTemplateVisibility()" />
           <span class="switch-track"><span class="switch-thumb"></span></span>
-          <span class="switch-label">3. Show template</span>
+          <span class="switch-label">Show template</span>
         </label>
         <div id="templateBody" class="collapsible-body" hidden>
           <p class="hint">
@@ -809,14 +802,6 @@
 
         currentContacts = rows;
 
-        let validCount = 0;
-        rows.forEach((r) => {
-          if (checkMember(Object.assign({}, r)) !== null) validCount++;
-        });
-
-        document.getElementById("gridSummary").textContent =
-          `${rows.length} contacts — ${validCount} ready to notify, ${rows.length - validCount} will be skipped`;
-
         let html = '<table class="data-grid"><thead><tr><th>Status</th>';
         columns.forEach((col) => { html += `<th>${col}</th>`; });
         html += "<th>Message</th></tr></thead><tbody>";
@@ -870,16 +855,18 @@
         const totalsRow = document.getElementById("statusTotalsRow");
         if (!totalsRow) return;
 
+        const chips = document.querySelectorAll("#dataGrid .status-cell .chip");
         const counts = {};
-        document.querySelectorAll("#dataGrid .status-cell .chip").forEach((chip) => {
+        chips.forEach((chip) => {
           counts[chip.textContent] = (counts[chip.textContent] || 0) + 1;
         });
 
-        const summary = Object.entries(counts)
-          .map(([label, count]) => `${label}: ${count}`)
-          .join("   ");
+        const parts = Object.entries(counts).map(([label, count]) => `${label}: ${count}`);
+        if (chips.length) {
+          parts.push(`Total: ${chips.length}`);
+        }
 
-        totalsRow.querySelector("td").textContent = summary || "No contacts loaded";
+        totalsRow.querySelector("td").textContent = parts.join("   ") || "No contacts loaded";
       }
 
       // Shows what the message would look like for one contact, using the
