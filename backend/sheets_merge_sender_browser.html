@@ -315,6 +315,22 @@
         font-size: 0.9rem;
       }
 
+      .form-group--inline {
+        flex-direction: row;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 10px;
+      }
+
+      .form-group--inline label {
+        flex: none;
+      }
+
+      .form-group--inline select {
+        flex: 1;
+        min-width: 200px;
+      }
+
       .form-group input,
       .form-group select {
         padding: 9px 10px;
@@ -523,6 +539,12 @@
         font-size: 0.9rem;
         color: var(--text);
       }
+
+      .modal-actions {
+        display: flex;
+        justify-content: flex-end;
+        margin-top: 16px;
+      }
     </style>
   </head>
   <body>
@@ -558,15 +580,14 @@
           <div id="dataGrid"></div>
         </div>
 
-        <div class="form-group">
+        <div class="form-group form-group--inline">
           <label for="modeSelect">Mode:</label>
           <select id="modeSelect">
             <option value="preview">Preview Only</option>
-            <option value="testfile">Test File (write to .txt)</option>
+            <option value="send">Send (SMS, or Email if no phone)</option>
+            <option value="testfile">Test File (write to test_send_&lt;date&gt;.txt)</option>
             <option value="testphone">Test SMS - all to one number</option>
             <option value="testemail">Test Email - all to one address</option>
-            <option value="email">Send Email</option>
-            <option value="sms">Send SMS</option>
           </select>
         </div>
 
@@ -641,7 +662,11 @@
           <h3 id="msgPreviewName"></h3>
           <button class="btn btn-ghost btn-sm" onclick="closeMsgPreview()">Close</button>
         </div>
+        <p id="msgPreviewChannel" class="hint"></p>
         <pre id="msgPreviewText" class="modal-message"></pre>
+        <div class="modal-actions">
+          <button class="btn btn-primary" onclick="sendPreviewMessage()">Send</button>
+        </div>
       </div>
     </div>
 
@@ -797,7 +822,9 @@
         html += "<th>Message</th></tr></thead><tbody>";
 
         rows.forEach((row, rowIndex) => {
-          const valid = checkMember(Object.assign({}, row)) !== null;
+          const checkedMember = checkMember(Object.assign({}, row));
+          const valid = checkedMember !== null;
+          const sendBy = valid ? checkedMember["SendBy"] : null;
           html += `<tr class="${valid ? "" : "row-skip"}" data-row="${rowIndex}">`;
           html += `<td class="status-cell">${
             valid
@@ -807,7 +834,11 @@
           columns.forEach((col) => {
             let val = row[col] != null ? row[col] : "";
             const cellClass = numericColumns.has(col) ? ' class="num-cell"' : "";
-            html += `<td${cellClass}>${String(val)}</td>`;
+            const isSendColumn =
+              (col === "Phone/email" && sendBy === "phone") ||
+              (col === "email" && sendBy === "email");
+            const content = isSendColumn ? `<strong>${String(val)}</strong>` : String(val);
+            html += `<td${cellClass}>${content}</td>`;
           });
           html += `<td>${
             valid
@@ -852,7 +883,10 @@
       }
 
       // Shows what the message would look like for one contact, using the
-      // current template
+      // current template. Also wires up the modal's Send button so that
+      // single contact can be (re)sent on demand.
+      let msgPreviewRowIndex = null;
+
       function viewMessage(rowIndex) {
         const raw = currentContacts[rowIndex];
         if (!raw) return;
@@ -872,13 +906,58 @@
 
         const message = substituteTemplate(member, template, celebrationDate);
         const name = `${member["FirstName"]} ${member["LastName (initial)"] || ""}`.trim();
-        showMsgPreview(name, message);
+        const channel =
+          member["SendBy"] === "phone"
+            ? `Will send by Text to ${member["Phone/email"]}`
+            : `Will send by Email to ${member["email"]}`;
+
+        msgPreviewRowIndex = rowIndex;
+        showMsgPreview(name, channel, message);
       }
 
-      function showMsgPreview(name, message) {
+      function showMsgPreview(name, channel, message) {
         document.getElementById("msgPreviewName").textContent = name;
+        document.getElementById("msgPreviewChannel").textContent = channel;
         document.getElementById("msgPreviewText").textContent = message;
         document.getElementById("msgPreviewModal").hidden = false;
+      }
+
+      // Sends (or resends) the message currently shown in the preview modal
+      async function sendPreviewMessage() {
+        const rowIndex = msgPreviewRowIndex;
+        const raw = currentContacts[rowIndex];
+        if (!raw) return;
+
+        const member = checkMember(Object.assign({}, raw));
+        if (!member) return;
+
+        const template = document.getElementById("messageTemplate").value;
+        if (!template.trim()) {
+          addStatus("Enter a message template first", "error");
+          return;
+        }
+
+        const celebrationDate = raw["CelebrationDate"]
+          ? formatExcelDate(raw["CelebrationDate"])
+          : "the celebration date";
+        const message = substituteTemplate(member, template, celebrationDate);
+
+        let sendOk;
+        let statusLabel;
+        if (member["SendBy"] === "phone") {
+          sendOk = await sendTextMsg(message, member["Phone/email"]);
+          statusLabel = "Text";
+        } else {
+          sendOk = await sendEmailMsg(message, member["email"]);
+          statusLabel = "Email";
+        }
+
+        setRowStatus(rowIndex, sendOk ? statusLabel : "Failed", sendOk ? "sent" : "failed");
+        addStatus(
+          sendOk ? "Message sent" : "Message failed to send - check the log",
+          sendOk ? "success" : "error"
+        );
+        closeMsgPreview();
       }
 
       function closeMsgPreview() {
@@ -1214,14 +1293,11 @@
                 sendOk = await sendTestFileMsg(sendMsg, validMember);
                 processedCount++;
                 statusLabel = "Test File";
-              } else if (mode === "sms" && validMember["SendBy"] === "phone") {
+              } else if (mode === "send" && validMember["SendBy"] === "phone") {
                 sendOk = await sendTextMsg(sendMsg, validMember["Phone/email"]);
                 processedCount++;
                 statusLabel = "Text";
-              } else if (
-                mode === "email" &&
-                validMember["SendBy"] === "email"
-              ) {
+              } else if (mode === "send" && validMember["SendBy"] === "email") {
                 sendOk = await sendEmailMsg(sendMsg, validMember["email"]);
                 processedCount++;
                 statusLabel = "Email";

@@ -94,9 +94,15 @@ app.post("/api/send-sms", async (req, res) => {
       });
     }
 
-    // Validate phone number format
-    const phoneRegex = /^\+?[1-9]\d{1,14}$/;
-    if (!phoneRegex.test(to.replace(/\s/g, ""))) {
+    // Normalize to E.164: strip formatting like dashes/parens/spaces,
+    // assume a bare 10-digit number is a US number
+    let normalizedTo = String(to).replace(/[^\d+]/g, "");
+    if (!normalizedTo.startsWith("+")) {
+      normalizedTo = normalizedTo.length === 10 ? `+1${normalizedTo}` : `+${normalizedTo}`;
+    }
+
+    const phoneRegex = /^\+[1-9]\d{1,14}$/;
+    if (!phoneRegex.test(normalizedTo)) {
       return res.status(400).json({
         error: "Invalid phone number format",
       });
@@ -106,7 +112,7 @@ app.post("/api/send-sms", async (req, res) => {
     const twilioMessage = await getTwilioClient().messages.create({
       body: message,
       from: process.env.TWILIO_PHONE_NUMBER || "+16592745880",
-      to: to,
+      to: normalizedTo,
     });
 
     console.log(`SMS sent successfully: ${twilioMessage.sid}`);
