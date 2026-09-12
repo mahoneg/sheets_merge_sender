@@ -1,119 +1,983 @@
 <!DOCTYPE html>
 <html lang="en">
   <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Sheets Merge Sender - Items</title>
-    <link
-      rel="stylesheet"
-      href="https://unpkg.com/ag-grid-community/styles/ag-grid.css"
-    />
-    <link
-      rel="stylesheet"
-      href="https://unpkg.com/ag-grid-community/styles/ag-theme-alpine.css"
-    />
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>St. Barts Celebration Sender</title>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Source+Sans+3:wght@400;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/dayjs@1.11.10/dayjs.min.js"></script>
     <style>
+      :root {
+        --bg: #edf1ef;
+        --surface: #ffffff;
+        --surface-2: #e1e8e4;
+        --border: #c9d4ce;
+        --text: #16211d;
+        --text-muted: #55655d;
+        --accent: #a9762c;
+        --accent-strong: #7c5620;
+        --on-accent: #ffffff;
+        --success: #2e7d5c;
+        --success-bg: #e1f1e8;
+        --danger: #a6432e;
+        --danger-bg: #f5e5e0;
+        --info: #3d6e8c;
+        --info-bg: #e1edf3;
+        --focus: #3d6e8c;
+        --shadow: rgba(22, 33, 29, 0.08);
+
+        --font-display: "Fraunces", Georgia, serif;
+        --font-body: "Source Sans 3", -apple-system, "Segoe UI", sans-serif;
+        --font-mono: "IBM Plex Mono", SFMono-Regular, Consolas, monospace;
+      }
+
+      @media (prefers-color-scheme: dark) {
+        :root {
+          --bg: #131c18;
+          --surface: #1b2721;
+          --surface-2: #223129;
+          --border: #33473f;
+          --text: #e7efea;
+          --text-muted: #9fb3a8;
+          --accent: #d8ac66;
+          --accent-strong: #e9c289;
+          --on-accent: #1e1408;
+          --success: #63c296;
+          --success-bg: #1d3327;
+          --danger: #e2907b;
+          --danger-bg: #3a241e;
+          --info: #82bedd;
+          --info-bg: #1c2c34;
+          --focus: #82bedd;
+          --shadow: rgba(0, 0, 0, 0.4);
+        }
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
       body {
-        font-family: Arial, Helvetica, sans-serif;
-        margin: 16px;
+        margin: 0;
+        padding-block: 40px;
+        padding-inline: 16px;
+        background: var(--bg);
+        color: var(--text);
+        font-family: var(--font-body);
+        line-height: 1.5;
       }
-      #controls {
-        margin-bottom: 8px;
+
+      .page {
+        max-width: 880px;
+        margin: 0 auto;
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
       }
-      #myGrid {
-        height: 400px;
+
+      .app-header {
+        padding-block: 8px 4px;
+      }
+
+      .eyebrow {
+        margin: 0 0 6px;
+        font-size: 0.75rem;
+        font-weight: 600;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: var(--accent-strong);
+      }
+
+      .app-header h1 {
+        margin: 0 0 8px;
+        font-family: var(--font-display);
+        font-weight: 600;
+        font-size: clamp(1.75rem, 1.4rem + 1.5vw, 2.4rem);
+        text-wrap: balance;
+      }
+
+      .app-header .subtitle {
+        margin: 0;
+        max-width: 60ch;
+        color: var(--text-muted);
+        font-size: 1.05rem;
+      }
+
+      .card {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        padding: 24px;
+        box-shadow: 0 1px 3px var(--shadow);
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+      }
+
+      .card h2 {
+        margin: 0;
+        font-family: var(--font-display);
+        font-weight: 600;
+        font-size: 1.2rem;
+      }
+
+      .card .hint {
+        margin: -8px 0 0;
+        color: var(--text-muted);
+        font-size: 0.9rem;
+      }
+
+      .card .hint code {
+        font-family: var(--font-mono);
+        background: var(--surface-2);
+        padding: 1px 5px;
+        border-radius: 4px;
+        font-size: 0.85em;
+      }
+
+      .grid-summary {
+        margin: -8px 0 0;
+        font-weight: 600;
+        color: var(--text-muted);
+      }
+
+      .grid-container {
+        overflow-x: auto;
+        max-height: 340px;
+        overflow-y: auto;
+        border: 1px solid var(--border);
+        border-radius: 8px;
+      }
+
+      .data-grid {
         width: 100%;
+        border-collapse: collapse;
+        font-size: 0.85rem;
+      }
+
+      .data-grid th {
+        background: var(--surface-2);
+        color: var(--text);
+        padding: 10px 12px;
+        text-align: left;
+        position: sticky;
+        top: 0;
+        white-space: nowrap;
+        font-weight: 600;
+        border-bottom: 1px solid var(--border);
+      }
+
+      .data-grid td {
+        padding: 8px 12px;
+        border-bottom: 1px solid var(--border);
+        white-space: nowrap;
+      }
+
+      .data-grid td.num-cell {
+        font-family: var(--font-mono);
+        font-variant-numeric: tabular-nums;
+      }
+
+      .data-grid tbody tr:hover {
+        background: var(--surface-2);
+      }
+
+      .row-skip {
+        color: var(--text-muted);
+      }
+
+      .chip {
+        display: inline-flex;
+        align-items: center;
+        padding: 2px 10px;
+        border-radius: 999px;
+        font-size: 0.75rem;
+        font-weight: 600;
+        letter-spacing: 0.02em;
+        white-space: nowrap;
+      }
+
+      .chip--ready {
+        background: var(--success-bg);
+        color: var(--success);
+      }
+
+      .chip--skip {
+        background: var(--danger-bg);
+        color: var(--danger);
+      }
+
+      .form-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(200px, 1fr));
+        gap: 16px;
+      }
+
+      .form-group {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+      }
+
+      .form-group label {
+        font-weight: 600;
+        font-size: 0.9rem;
+      }
+
+      .form-group input,
+      .form-group select {
+        padding: 9px 10px;
+        border: 1px solid var(--border);
+        border-radius: 6px;
+        background: var(--surface);
+        color: var(--text);
+        font-family: var(--font-body);
+        font-size: 0.95rem;
+      }
+
+      .form-group input:focus,
+      .form-group select:focus,
+      .template-textarea:focus {
+        outline: 2px solid var(--focus);
+        outline-offset: 1px;
+      }
+
+      .template-textarea {
+        width: 100%;
+        height: 150px;
+        padding: 12px;
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        background: var(--surface);
+        color: var(--text);
+        font-family: var(--font-mono);
+        font-size: 0.9rem;
+        resize: vertical;
+      }
+
+      .actions {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 10px;
+      }
+
+      .btn {
+        font-family: var(--font-body);
+        font-weight: 600;
+        font-size: 0.95rem;
+        border-radius: 7px;
+        padding: 11px 22px;
+        cursor: pointer;
+        border: 1px solid transparent;
+        transition: background-color 0.15s ease, border-color 0.15s ease;
+      }
+
+      @media (prefers-reduced-motion: reduce) {
+        .btn {
+          transition: none;
+        }
+      }
+
+      .btn-primary {
+        background: var(--accent-strong);
+        color: var(--on-accent);
+      }
+
+      .btn-primary:hover:not(:disabled) {
+        background: var(--accent);
+      }
+
+      .btn-primary:disabled {
+        background: var(--surface-2);
+        color: var(--text-muted);
+        cursor: not-allowed;
+      }
+
+      .btn-ghost {
+        background: transparent;
+        color: var(--text);
+        border-color: var(--border);
+      }
+
+      .btn-ghost:hover {
+        background: var(--surface-2);
+      }
+
+      .status-stack {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+      }
+
+      .status {
+        padding: 10px 14px;
+        border-radius: 7px;
+        font-size: 0.9rem;
+        border: 1px solid transparent;
+      }
+
+      .status.success {
+        background: var(--success-bg);
+        color: var(--success);
+        border-color: var(--success);
+      }
+
+      .status.error {
+        background: var(--danger-bg);
+        color: var(--danger);
+        border-color: var(--danger);
+      }
+
+      .status.info {
+        background: var(--info-bg);
+        color: var(--info);
+        border-color: var(--info);
+      }
+
+      .log-output {
+        background: var(--surface-2);
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        padding: 14px 16px;
+        height: 300px;
+        overflow-y: auto;
+        font-family: var(--font-mono);
+        font-size: 0.8rem;
+      }
+
+      .log-line {
+        white-space: pre-wrap;
+        padding: 1px 0;
+        color: var(--text);
+      }
+
+      .log-line--success {
+        color: var(--success);
+      }
+
+      .log-line--danger {
+        color: var(--danger);
+        font-weight: 600;
+      }
+
+      .log-line--warn {
+        color: var(--accent-strong);
+      }
+
+      @media (max-width: 520px) {
+        .form-grid {
+          grid-template-columns: 1fr;
+        }
       }
     </style>
   </head>
   <body>
-    <h1>Loaded Items</h1>
-    <div id="controls">
-      <button id="loadBtn">Load Items</button>
-      <button id="refreshBtn">Refresh</button>
+    <div class="page">
+      <header class="app-header">
+        <p class="eyebrow">HoHoKus St. Barts &middot; Sobriety Celebrations</p>
+        <h1>Celebration Sender</h1>
+        <p class="subtitle">
+          Upload the roster, see who's ready to hear from you, and send
+          sobriety-anniversary messages by text or email.
+        </p>
+      </header>
+
+      <section class="card">
+        <h2>1. Upload the roster</h2>
+        <div class="form-group">
+          <label for="excelFile">Excel file (.xlsx) with a "List" sheet:</label>
+          <input type="file" id="excelFile" accept=".xlsx,.xls" />
+        </div>
+        <div>
+          <button class="btn btn-primary" onclick="loadExcelFile()">Load File</button>
+        </div>
+      </section>
+
+      <section id="dataGridSection" class="card" style="display: none">
+        <h2>2. Loaded contacts</h2>
+        <p id="gridSummary" class="grid-summary"></p>
+        <div class="grid-container">
+          <div id="dataGrid"></div>
+        </div>
+      </section>
+
+      <section class="card">
+        <h2>3. Settings</h2>
+        <div class="form-grid">
+          <div class="form-group">
+            <label for="modeSelect">Mode:</label>
+            <select id="modeSelect">
+              <option value="preview">Preview Only</option>
+              <option value="testfile">Test File (write to .txt)</option>
+              <option value="testphone">Test SMS - all to one number</option>
+              <option value="testemail">Test Email - all to one address</option>
+              <option value="email">Send Email</option>
+              <option value="sms">Send SMS</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="maxNotifies">Max notifications:</label>
+            <input type="number" id="maxNotifies" value="1000000" min="1" />
+          </div>
+          <div class="form-group">
+            <label for="testPhone">Test phone (overrides recipients for SMS mode):</label>
+            <input type="tel" id="testPhone" placeholder="+1234567890" />
+          </div>
+          <div class="form-group">
+            <label for="testEmail">Test email (overrides recipients for Email mode):</label>
+            <input type="email" id="testEmail" placeholder="test@example.com" />
+          </div>
+        </div>
+      </section>
+
+      <section class="card">
+        <h2>4. Message template</h2>
+        <p class="hint">
+          Placeholders: <code>&lt;FirstName&gt;</code>
+          <code>&lt;LastName&gt;</code> <code>&lt;CelebrationDate&gt;</code>
+          <code>&lt;Sobriety&gt;</code> <code>&lt;SobrietyUnit&gt;</code>
+        </p>
+        <textarea
+          id="messageTemplate"
+          class="template-textarea"
+          placeholder="Enter your message template here, or load an Excel file with a Template sheet..."
+        ></textarea>
+      </section>
+
+      <div class="actions">
+        <button class="btn btn-primary" onclick="processContacts()" id="processBtn" disabled>
+          Process Contacts
+        </button>
+        <button class="btn btn-ghost" onclick="clearLog()">Clear Log</button>
+        <button class="btn btn-ghost" onclick="downloadLog()">Download Log</button>
+      </div>
+
+      <section class="card">
+        <h2>Results</h2>
+        <div id="statusContainer" class="status-stack"></div>
+        <div class="log-output" id="logOutput"></div>
+      </section>
     </div>
 
-    <div id="myGrid" class="ag-theme-alpine"></div>
-
-    <script src="https://unpkg.com/ag-grid-community@26.2.0/dist/ag-grid-community.min.js"></script>
     <script>
-      const gridDiv = document.querySelector("#myGrid");
-
-      // Column definitions - will be adapted when data loads
-      let columnDefs = [
-        { field: "id", headerName: "ID", sortable: true, filter: true },
-        { field: "name", headerName: "Name", sortable: true, filter: true },
-        { field: "value", headerName: "Value", sortable: true, filter: true },
-      ];
-
-      const gridOptions = {
-        columnDefs: columnDefs,
-        rowData: null,
-        defaultColDef: {
-          resizable: true,
-        },
-        animateRows: true,
+      // Constants (browser version)
+      const constants = {
+        defaultSpreadsheetId: "10qPkK1HpQINElAO8rQ93DXGshwDFm7UU-oJLDV3-vpg",
+        memberSheetName: "List",
+        templateSheetName: "Template",
+        FIRST_NAME_COL: 1,
+        LAST_NAME_COL: 2,
+        PHONE_COL: 3,
+        EMAIL_COL: 4,
+        SOBRIETY_COL: 5,
+        UNITS_COL: 6,
+        TEST_SENDER_LEVEL: "TEST_SENDER_LEVEL",
+        TEST_SENDER_LIVE: "LIVE",
+        TEST_SENDER_TO_PHONE: "TEST_PHONE",
+        TEST_SENDER_TO_FILE: "TEST_FILE",
+        TEST_DEFAULT_PHONE_NUMBER: "+18777804236",
+        TEST_DEFAULT_EMAIL_ADDR: "mahoneg1@gmail.com",
+        TEST_DEFAULT_FILE_PATH: "./send_file.txt",
+        SPREADSHEET_LOCAL: "SPEADSHEET_LOCAL",
+        SPREADSHEET_REMOTE: "SPEADSHEET_REMOTE",
       };
 
-      // create the grid with diagnostics/fallbacks
-      function createGrid() {
-        const available = {
-          agGrid: window.agGrid,
-          AgGrid: window.AgGrid,
-          ag_grid: window["ag-grid"],
-        };
+      // Global variables
+      let spreadsheetData = null;
+      let memberCount = 0;
+      let logMessages = [];
 
-        // Try common global locations for the constructor
-        const GridCtor =
-          window.agGrid?.Grid ||
-          window.AgGrid?.Grid ||
-          window["ag-grid"]?.Grid ||
-          window.agGrid ||
-          window.AgGrid;
+      // Utility functions
+      function classifyLogLine(message) {
+        if (/FAILED|ERROR/.test(message)) return "log-line--danger";
+        if (/Not configured|not responding|Cannot connect/.test(message)) return "log-line--warn";
+        if (/sent OK|Written to|Backend server is running|: Configured/.test(message)) return "log-line--success";
+        return "";
+      }
 
-        if (typeof GridCtor === "function") {
-          new GridCtor(gridDiv, gridOptions);
+      function log(message) {
+        const timestamp = new Date().toLocaleTimeString();
+        const logMessage = `[${timestamp}] ${message}`;
+        logMessages.push(logMessage);
+
+        const logOutput = document.getElementById("logOutput");
+        const line = document.createElement("div");
+        const lineClass = classifyLogLine(message);
+        line.className = lineClass ? `log-line ${lineClass}` : "log-line";
+        line.textContent = logMessage;
+        logOutput.appendChild(line);
+        logOutput.scrollTop = logOutput.scrollHeight;
+
+        console.log(logMessage);
+      }
+
+      function addStatus(message, type = "info") {
+        const statusContainer = document.getElementById("statusContainer");
+        const statusDiv = document.createElement("div");
+        statusDiv.className = `status ${type}`;
+        statusDiv.textContent = message;
+        statusContainer.appendChild(statusDiv);
+
+        setTimeout(() => {
+          if (statusDiv.parentNode) {
+            statusDiv.parentNode.removeChild(statusDiv);
+          }
+        }, 5000);
+      }
+
+      function clearLog() {
+        logMessages = [];
+        document.getElementById("logOutput").textContent = "";
+        document.getElementById("statusContainer").innerHTML = "";
+      }
+
+      function downloadLog() {
+        const content = logMessages.join("\n");
+        const blob = new Blob([content], { type: "text/plain" });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = `merge_sender_log_${new Date()
+          .toISOString()
+          .slice(0, 19)
+          .replace(/:/g, "-")}.txt`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+      }
+
+      // Convert Excel serial date number to formatted string
+      function formatExcelDate(serial) {
+        if (!serial || typeof serial !== "number") return String(serial || "");
+        // Excel serial dates count from Dec 30, 1899 (accounts for Excel's leap year bug)
+        const date = new Date(Date.UTC(1899, 11, 30) + serial * 86400000);
+        return dayjs(date).format("ddd MMM D");
+      }
+
+      // Render loaded contacts into a grid below the file upload section
+      function renderGrid(workbook) {
+        const section = document.getElementById("dataGridSection");
+        const listSheet = workbook.Sheets["List"];
+        if (!listSheet) {
+          section.style.display = "none";
           return;
         }
 
-        console.error(
-          "ag-grid Grid constructor not found. Available globals:",
-          available
-        );
-        gridDiv.innerHTML =
-          '<pre style="color:red">ag-grid bundle not loaded correctly. Check console for details.</pre>';
+        const rows = XLSX.utils.sheet_to_json(listSheet);
+        if (rows.length === 0) {
+          section.style.display = "none";
+          return;
+        }
+
+        const columns = [
+          "FirstName",
+          "LastName (initial)",
+          "Phone/email",
+          "email",
+          "Sobriety",
+          "SobrietyUnit",
+          "CelebrationDate",
+        ];
+        const numericColumns = new Set(["Sobriety", "CelebrationDate"]);
+
+        let validCount = 0;
+        rows.forEach((r) => {
+          if (checkMember(Object.assign({}, r)) !== null) validCount++;
+        });
+
+        document.getElementById("gridSummary").textContent =
+          `${rows.length} contacts — ${validCount} ready to notify, ${rows.length - validCount} will be skipped`;
+
+        let html = '<table class="data-grid"><thead><tr><th>Status</th>';
+        columns.forEach((col) => { html += `<th>${col}</th>`; });
+        html += "</tr></thead><tbody>";
+
+        rows.forEach((row) => {
+          const valid = checkMember(Object.assign({}, row)) !== null;
+          html += `<tr class="${valid ? "" : "row-skip"}">`;
+          html += `<td>${
+            valid
+              ? '<span class="chip chip--ready">Ready</span>'
+              : '<span class="chip chip--skip">Skip</span>'
+          }</td>`;
+          columns.forEach((col) => {
+            let val = row[col] != null ? row[col] : "";
+            if (col === "CelebrationDate" && typeof val === "number") {
+              val = formatExcelDate(val);
+            }
+            const cellClass = numericColumns.has(col) ? ' class="num-cell"' : "";
+            html += `<td${cellClass}>${String(val)}</td>`;
+          });
+          html += "</tr>";
+        });
+
+        html += "</tbody></table>";
+        document.getElementById("dataGrid").innerHTML = html;
+        section.style.display = "block";
       }
 
-      createGrid();
+      // File handling functions
+      function loadExcelFile() {
+        const fileInput = document.getElementById("excelFile");
+        const file = fileInput.files[0];
 
-      async function loadItems() {
-        try {
-          const res = await fetch("/api/items");
-          if (!res.ok) throw new Error("Failed to fetch items: " + res.status);
-          const items = await res.json();
+        if (!file) {
+          addStatus("Please select a file first", "error");
+          return;
+        }
 
-          // If items exist, adapt columns to data keys (simple heuristic)
-          if (Array.isArray(items) && items.length > 0) {
-            const keys = Object.keys(items[0]);
-            gridOptions.api.setColumnDefs(
-              keys.map((k) => ({ field: k, headerName: k }))
-            );
+        const reader = new FileReader();
+        reader.onload = function (e) {
+          try {
+            const data = new Uint8Array(e.target.result);
+            const workbook = XLSX.read(data, { type: "array" });
+            spreadsheetData = workbook;
+
+            log(`Successfully loaded Excel file: ${file.name}`);
+            log(`Available sheets: ${workbook.SheetNames.join(", ")}`);
+
+            // Load template from Template sheet (stored in cell A1)
+            const templateSheet = workbook.Sheets["Template"];
+            if (templateSheet && templateSheet.A1) {
+              const rawTemplate = templateSheet.A1.v;
+              document.getElementById("messageTemplate").value =
+                rawTemplate.replace(/\r/g, "");
+              log("Template loaded from Excel Template sheet");
+            }
+
+            renderGrid(workbook);
+
+            document.getElementById("processBtn").disabled = false;
+            addStatus("Excel file loaded successfully!", "success");
+          } catch (error) {
+            log(`Error loading Excel file: ${error.message}`);
+            addStatus("Error loading Excel file", "error");
           }
+        };
+        reader.readAsArrayBuffer(file);
+      }
 
-          gridOptions.api.setRowData(items);
-        } catch (err) {
-          alert("Error loading items: " + err.message);
-          console.error(err);
+      // Member validation function
+      function checkMember(member) {
+        if (!member["FirstName"] || member["FirstName"] === "") {
+          return null;
+        }
+
+        if (
+          (!member["Phone/email"] || member["Phone/email"] === "") &&
+          (!member["email"] || member["email"] === "")
+        ) {
+          return null;
+        }
+
+        if (member["Phone/email"] && member["Phone/email"] !== "") {
+          member["SendBy"] = "phone";
+        } else {
+          member["SendBy"] = "email";
+        }
+
+        return member;
+      }
+
+      // Template substitution function
+      function substituteTemplate(member, template, celebrationDate) {
+        let sobrietyUnit = member["SobrietyUnit"];
+        if (sobrietyUnit === "days") {
+          sobrietyUnit = "day";
+        } else if (sobrietyUnit === "years") {
+          sobrietyUnit = "year";
+        }
+
+        let returnString = template
+          .replace(/<FirstName>/g, member["FirstName"] || "")
+          .replace(/<LastName>/g, member["LastName (initial)"] || "");
+
+        returnString = returnString
+          .replace(/<CelebrationDate>/g, celebrationDate || "")
+          .replace(/<Sobriety>/g, member["Sobriety"] || "")
+          .replace(/<SobrietyUnit>/g, sobrietyUnit || "");
+
+        return returnString;
+      }
+
+      // Test file mode — sends message to backend which writes it to a .txt file
+      async function sendTestFileMsg(sendMsg, member) {
+        const name = `${member["FirstName"]} ${member["LastName (initial)"] || ""}`.trim();
+        const contact = member["SendBy"] === "phone"
+          ? member["Phone/email"]
+          : member["email"];
+
+        try {
+          const response = await fetch("/api/send-test-file", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              name,
+              contact,
+              sendBy: member["SendBy"],
+              message: sendMsg,
+            }),
+          });
+
+          const result = await response.json();
+
+          if (result.success) {
+            log(`  Written to: ${result.filePath}`);
+          } else {
+            log(`  FAILED: File write failed: ${result.error}`);
+          }
+        } catch (error) {
+          log(`  FAILED: Test file error: ${error.message}`);
         }
       }
 
-      document.getElementById("loadBtn").addEventListener("click", loadItems);
-      document.getElementById("refreshBtn").addEventListener("click", () => {
-        gridOptions.api.refreshCells();
-      });
+      // Browser-compatible SMS sending with backend API
+      async function sendTextMsg(sendMsg, toNumber) {
+        const testPhone = document.getElementById("testPhone").value;
+        const actualNumber = testPhone || toNumber;
 
-      // Auto-load on page open
-      loadItems();
+        log(`\n*********** SEND SMS MESSAGE ***********`);
+        log(`To: ${actualNumber}`);
+        log(`Message: ${sendMsg}`);
+
+        try {
+          const response = await fetch("/api/send-sms", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              to: actualNumber,
+              message: sendMsg,
+            }),
+          });
+
+          const result = await response.json();
+
+          if (result.success) {
+            log(`SMS sent OK. Message ID: ${result.messageId}`);
+          } else {
+            log(`SMS FAILED: ${result.error}`);
+          }
+        } catch (error) {
+          log(`SMS ERROR: ${error.message}`);
+        }
+
+        log(`*****************************************\n`);
+      }
+
+      // Browser-compatible email sending with backend API
+      async function sendEmailMsg(sendMsg, toEmail) {
+        const testEmail = document.getElementById("testEmail").value;
+        const actualEmail = testEmail || toEmail;
+
+        log(`\n*********** SEND EMAIL MESSAGE ***********`);
+        log(`To: ${actualEmail}`);
+        log(`Subject: HoHoKus St Barts Celebration`);
+        log(`Message: ${sendMsg}`);
+
+        try {
+          const response = await fetch("/api/send-email", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              to: actualEmail,
+              message: sendMsg,
+              subject: "HoHoKus St Barts Celebration",
+            }),
+          });
+
+          const result = await response.json();
+
+          if (result.success) {
+            log(`Email sent OK. Message ID: ${result.messageId}`);
+          } else {
+            log(`Email FAILED: ${result.error}`);
+          }
+        } catch (error) {
+          log(`Email ERROR: ${error.message}`);
+        }
+
+        log(`*******************************************\n`);
+      }
+
+      // Main processing function
+      async function processContacts() {
+        if (!spreadsheetData) {
+          addStatus("Please load an Excel file first", "error");
+          return;
+        }
+
+        const mode = document.getElementById("modeSelect").value;
+        const maxNotifies = parseInt(
+          document.getElementById("maxNotifies").value
+        );
+
+        if (mode === "testphone" && !document.getElementById("testPhone").value.trim()) {
+          addStatus("Test SMS mode requires a Test Phone Number to be set above.", "error");
+          return;
+        }
+
+        if (mode === "testemail" && !document.getElementById("testEmail").value.trim()) {
+          addStatus("Test Email mode requires a Test Email address to be set above.", "error");
+          return;
+        }
+
+        log("Starting contact processing...");
+        addStatus("Processing contacts...", "info");
+
+        try {
+          const listSheet = spreadsheetData.Sheets["List"];
+          if (!listSheet) {
+            throw new Error("List sheet not found in Excel file");
+          }
+
+          const celebrantList = XLSX.utils.sheet_to_json(listSheet);
+          log(`Found ${celebrantList.length} contacts in the List sheet`);
+
+          const msgTemplate = document.getElementById("messageTemplate").value;
+          if (!msgTemplate.trim()) {
+            throw new Error("Please enter a message template");
+          }
+
+          memberCount = 0;
+          let processedCount = 0;
+          let skippedCount = 0;
+
+          for (const member of celebrantList) {
+            memberCount++;
+
+            if (memberCount === 1 && member["CelebrationDate"]) {
+              const celebrationDate = formatExcelDate(member["CelebrationDate"]);
+              log(`Celebration date: ${celebrationDate}`);
+            }
+
+            const validMember = checkMember(member);
+            if (validMember) {
+              const celebrationDate = member["CelebrationDate"]
+                ? formatExcelDate(member["CelebrationDate"])
+                : "the celebration date";
+
+              const sendMsg = substituteTemplate(
+                validMember,
+                msgTemplate,
+                celebrationDate
+              );
+
+              if (mode === "preview") {
+                log(`\n--- PREVIEW MESSAGE ${memberCount} ---`);
+                log(
+                  `Name: ${validMember["FirstName"]} ${
+                    validMember["LastName (initial)"] || ""
+                  }`
+                );
+                log(`Send by: ${validMember["SendBy"]}`);
+                log(
+                  `Contact: ${
+                    validMember["SendBy"] === "phone"
+                      ? validMember["Phone/email"]
+                      : validMember["email"]
+                  }`
+                );
+                log(`Message: ${sendMsg}`);
+                log(`--- END PREVIEW ---\n`);
+              } else if (mode === "testphone") {
+                await sendTextMsg(sendMsg, "");
+                processedCount++;
+              } else if (mode === "testemail") {
+                await sendEmailMsg(sendMsg, "");
+                processedCount++;
+              } else if (mode === "testfile") {
+                log(`Writing message for: ${validMember["FirstName"]} (${validMember["SendBy"]})`);
+                await sendTestFileMsg(sendMsg, validMember);
+                processedCount++;
+              } else if (mode === "sms" && validMember["SendBy"] === "phone") {
+                await sendTextMsg(sendMsg, validMember["Phone/email"]);
+                processedCount++;
+              } else if (
+                mode === "email" &&
+                validMember["SendBy"] === "email"
+              ) {
+                await sendEmailMsg(sendMsg, validMember["email"]);
+                processedCount++;
+              }
+
+              if (mode !== "preview") {
+                log(
+                  `Processed member ${memberCount}: ${validMember["FirstName"]} (${validMember["SendBy"]})`
+                );
+              }
+            } else {
+              skippedCount++;
+              log(
+                `Skipped member ${memberCount}: ${
+                  member["FirstName"] || "Unknown"
+                } - missing required data`
+              );
+            }
+
+            if (memberCount >= maxNotifies) {
+              log(`Reached maximum notifications limit: ${maxNotifies}`);
+              break;
+            }
+          }
+
+          log(`\n=== PROCESSING COMPLETE ===`);
+          log(`Total contacts: ${celebrantList.length}`);
+          log(`Processed: ${processedCount}`);
+          log(`Skipped: ${skippedCount}`);
+          log(`Mode: ${mode.toUpperCase()}`);
+          log(`===============================\n`);
+
+          addStatus(
+            `Processing complete! Processed: ${processedCount}, Skipped: ${skippedCount}`,
+            "success"
+          );
+        } catch (error) {
+          log(`Error during processing: ${error.message}`);
+          addStatus(`Error: ${error.message}`, "error");
+        }
+      }
+
+      // Check backend status on startup
+      async function checkBackendStatus() {
+        try {
+          const response = await fetch("/api/health");
+          const result = await response.json();
+
+          if (result.status === "healthy") {
+            log("Backend server is running");
+            log(
+              `   Email service: ${
+                result.services.email ? "Configured" : "Not configured"
+              }`
+            );
+            log(
+              `   SMS service: ${
+                result.services.twilio ? "Configured" : "Not configured"
+              }`
+            );
+          } else {
+            log("Backend server is not responding");
+          }
+        } catch (error) {
+          log("Cannot connect to backend server");
+          log(
+            "   Make sure the backend server is running on http://localhost:3000"
+          );
+        }
+      }
+
+      document.addEventListener("DOMContentLoaded", function () {
+        log("Sheets Merge Sender Browser Version initialized");
+        log("Please upload an Excel file to begin");
+        checkBackendStatus();
+      });
     </script>
   </body>
 </html>
