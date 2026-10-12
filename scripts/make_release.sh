@@ -1,12 +1,14 @@
 #!/bin/bash
-# macOS/Linux version of make_release.ps1. Builds dist/sheets_merge_sender-v<version>-mac.zip
-# Usage: scripts/make_release.sh            (Apple Silicon; ARCH=x64 for Intel Macs)
+# macOS/Linux version of make_release.ps1. Builds dist/sheets_merge_sender-v<version>-mac-<arch>.zip
+# Usage: scripts/make_release.sh            (Apple Silicon = arm64; ARCH=x64 for Intel Macs)
 set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 BACKEND="$ROOT/backend"
 ARCH="${ARCH:-arm64}"
-VERSION="$(node -p "require('$BACKEND/package.json').version")"
-NAME="sheets_merge_sender-v$VERSION-mac"
+# Native path for node/python (Git Bash on Windows hands them /d/... paths they can't open)
+NROOT="$(cygpath -m "$ROOT" 2>/dev/null || echo "$ROOT")"
+VERSION="$(node -p "require('$NROOT/backend/package.json').version")"
+NAME="sheets_merge_sender-v$VERSION-mac-$ARCH"
 STAGE="$ROOT/dist/$NAME"
 ZIP="$ROOT/dist/$NAME.zip"
 
@@ -40,10 +42,10 @@ sed -E \
   -e 's/^(TEST_EMAIL_ADDR)=.*/\1=you@example.com/' \
   "$BACKEND/env.example" > "$STAGE/backend/env.example"
 
-node "$ROOT/scripts/make_sample_xlsx.js" "$STAGE/SampleMergeList.xlsx"
+node "$NROOT/scripts/make_sample_xlsx.js" "$(cygpath -m "$STAGE" 2>/dev/null || echo "$STAGE")/SampleMergeList.xlsx"
 
 cat > "$STAGE/README_FIRST.txt" <<TXT
-Sheets Merge Sender v$VERSION (macOS)
+Sheets Merge Sender v$VERSION (macOS, $ARCH)
 =====================================
 
 1. Unzip the whole folder somewhere (e.g. Documents).
@@ -58,5 +60,22 @@ Start with Preview / Test File modes - they send nothing.
 See USER_GUIDE.md for full details.
 TXT
 
-(cd "$ROOT/dist" && zip -qr "$NAME.zip" "$NAME")
+# Zip with exec bits set explicitly (filesystem modes are unreliable when building on Windows)
+PY="$(command -v python3 || command -v python)"
+"$PY" - "$NROOT/dist" "$NAME" <<'PYEOF'
+import os, sys, zipfile
+dist, name = sys.argv[1:3]
+execs = {name + "/start.command", name + "/runtime/node"}
+with zipfile.ZipFile(os.path.join(dist, name + ".zip"), "w", zipfile.ZIP_DEFLATED) as z:
+    for d, _, files in os.walk(os.path.join(dist, name)):
+        for f in files:
+            full = os.path.join(d, f)
+            arc = os.path.relpath(full, dist).replace(os.sep, "/")
+            zi = zipfile.ZipInfo.from_file(full, arc)
+            zi.compress_type = zipfile.ZIP_DEFLATED
+            zi.create_system = 3
+            zi.external_attr = ((0o755 if arc in execs else 0o644) | 0o100000) << 16
+            with open(full, "rb") as fh:
+                z.writestr(zi, fh.read())
+PYEOF
 echo "Created $ZIP"

@@ -8,9 +8,11 @@ emails. No coding knowledge needed.
 The app runs on your own computer. You start a small local server, then
 open it in your web browser.
 
-**Easiest way (Windows):**
+**Easiest way - Windows:**
 
-1. Open the `backend` folder.
+1. Unzip the whole download somewhere (e.g. Documents), then open the folder.
+   (If you are running from the source code instead of the download, the
+   launcher is inside the `backend` folder.)
 2. Double-click `start.bat`.
 3. A black window will open and stay open - leave it running. It will say:
 
@@ -22,9 +24,28 @@ open it in your web browser.
 4. Leave that window open the whole time you are using the app. Closing it
    stops the server.
 
-**On a Mac:** open Terminal, `cd` into the `backend` folder and run
-`./start.command` (or double-click `start.command` in Finder; if macOS
-blocks it, right-click > Open). Requires Node.js (`brew install node`).
+**Easiest way - Mac:**
+
+1. Unzip the whole download somewhere (e.g. Documents). Use the Mac
+   download that matches your Mac: `...-mac-arm64.zip` for Apple Silicon
+   (M1 or newer) or `...-mac-x64.zip` for Intel. (Apple menu > About This
+   Mac shows which you have.) The Windows download will not run on a Mac.
+2. First time only: macOS blocks programs that came from the internet.
+   Open Terminal and run (drag the unzipped folder onto the Terminal window
+   instead of typing its path):
+
+   ```bash
+   xattr -dr com.apple.quarantine /path/to/sheets_merge_sender-v1.0.0-mac-arm64
+   ```
+
+3. Double-click `start.command`. If macOS still refuses, right-click it and
+   choose Open. A Terminal window opens and stays open - leave it running.
+4. Leave that window open the whole time you are using the app. Closing it
+   stops the server.
+
+Nothing needs installing - the download includes Node.js. When running from
+the source code instead, the launcher is `backend/start.command` and Node.js
+must be installed (`brew install node`).
 
 **If you'd rather use the command line:**
 
@@ -33,8 +54,9 @@ cd backend
 npm start
 ```
 
-**First time only:** if `start.bat` says it created a `.env` file, open
-`backend/.env` in a text editor and fill in the real Twilio and Gmail
+**First time only:** if the launcher (`start.bat` / `start.command`) opens or
+creates a `.env` file, open `backend/.env` in a text editor (Notepad on
+Windows, TextEdit on Mac) and fill in the real Twilio and Gmail
 credentials before sending anything for real. Without this, Preview and
 Test File modes still work, but the Test SMS/Email modes and real Send
 will not.
