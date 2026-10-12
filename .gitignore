@@ -142,4 +142,4 @@ dist
 # storing secrets - creds here
 keys
 old_merges
-prev_lists\*
+prev_lists/
