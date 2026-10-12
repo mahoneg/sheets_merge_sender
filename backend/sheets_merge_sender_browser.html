@@ -906,6 +906,13 @@
         return dayjs(date).format("ddd MMM D");
       }
 
+      // The celebration date is entered on the first row only and applies to
+      // every message
+      function getCelebrationDate(rows) {
+        const serial = rows && rows[0] && rows[0]["CelebrationDate"];
+        return serial ? formatExcelDate(serial) : "the celebration date";
+      }
+
       // Render loaded contacts into a grid below the file upload section
       function renderGrid(workbook) {
         const section = document.getElementById("dataGridSection");
@@ -1026,9 +1033,7 @@
           return;
         }
 
-        const celebrationDate = raw["CelebrationDate"]
-          ? formatExcelDate(raw["CelebrationDate"])
-          : "the celebration date";
+        const celebrationDate = getCelebrationDate(currentContacts);
 
         const message = substituteTemplate(member, template, celebrationDate);
         const name = `${member["FirstName"]} ${member["LastName (initial)"] || ""}`.trim();
@@ -1063,9 +1068,7 @@
           return;
         }
 
-        const celebrationDate = raw["CelebrationDate"]
-          ? formatExcelDate(raw["CelebrationDate"])
-          : "the celebration date";
+        const celebrationDate = getCelebrationDate(currentContacts);
         const message = substituteTemplate(member, template, celebrationDate);
 
         let sendOk;
@@ -1245,10 +1248,16 @@
       }
 
       // Browser-compatible SMS sending with backend API
-      async function sendTextMsg(sendMsg, toNumber) {
-        const testPhone = document.getElementById("testPhone").value;
-        // Test override applies only in test mode (no real recipient passed)
-        const actualNumber = toNumber || testPhone;
+      async function sendTextMsg(sendMsg, toNumber, isTest = false) {
+        // Test phone is used only in test mode; real sends never fall back to it
+        const actualNumber = isTest
+          ? document.getElementById("testPhone").value.trim()
+          : (toNumber || "").trim();
+
+        if (!actualNumber) {
+          log(`SMS FAILED: no phone number${isTest ? " (Test phone is empty)" : " for this recipient"}`);
+          return false;
+        }
 
         log(`\n*********** SEND SMS MESSAGE ***********`);
         log(`To: ${actualNumber}`);
@@ -1284,10 +1293,16 @@
       }
 
       // Browser-compatible email sending with backend API
-      async function sendEmailMsg(sendMsg, toEmail) {
-        const testEmail = document.getElementById("testEmail").value;
-        // Test override applies only in test mode (no real recipient passed)
-        const actualEmail = toEmail || testEmail;
+      async function sendEmailMsg(sendMsg, toEmail, isTest = false) {
+        // Test email is used only in test mode; real sends never fall back to it
+        const actualEmail = isTest
+          ? document.getElementById("testEmail").value.trim()
+          : (toEmail || "").trim();
+
+        if (!actualEmail) {
+          log(`EMAIL FAILED: no email address${isTest ? " (Test email is empty)" : " for this recipient"}`);
+          return false;
+        }
 
         log(`\n*********** SEND EMAIL MESSAGE ***********`);
         log(`To: ${actualEmail}`);
@@ -1356,6 +1371,7 @@
           }
 
           const celebrantList = XLSX.utils.sheet_to_json(listSheet);
+          const celebrationDate = getCelebrationDate(celebrantList);
           log(`Found ${celebrantList.length} contacts in the List sheet`);
 
           const msgTemplate = document.getElementById("messageTemplate").value;
@@ -1372,8 +1388,7 @@
             const member = celebrantList[rowIndex];
             memberCount++;
 
-            if (memberCount === 1 && member["CelebrationDate"]) {
-              const celebrationDate = formatExcelDate(member["CelebrationDate"]);
+            if (memberCount === 1) {
               log(`Celebration date: ${celebrationDate}`);
             }
 
@@ -1390,10 +1405,6 @@
                 );
                 continue;
               }
-
-              const celebrationDate = member["CelebrationDate"]
-                ? formatExcelDate(member["CelebrationDate"])
-                : "the celebration date";
 
               const sendMsg = substituteTemplate(
                 validMember,
@@ -1423,11 +1434,11 @@
                 log(`--- END PREVIEW ---\n`);
                 statusLabel = "Previewed";
               } else if (mode === "testphone") {
-                sendOk = await sendTextMsg(sendMsg, "");
+                sendOk = await sendTextMsg(sendMsg, "", true);
                 processedCount++;
                 statusLabel = "Test Text";
               } else if (mode === "testemail") {
-                sendOk = await sendEmailMsg(sendMsg, "");
+                sendOk = await sendEmailMsg(sendMsg, "", true);
                 processedCount++;
                 statusLabel = "Test Email";
               } else if (mode === "testfile") {
