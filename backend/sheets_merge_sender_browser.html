@@ -1247,7 +1247,8 @@
       // Browser-compatible SMS sending with backend API
       async function sendTextMsg(sendMsg, toNumber) {
         const testPhone = document.getElementById("testPhone").value;
-        const actualNumber = testPhone || toNumber;
+        // Test override applies only in test mode (no real recipient passed)
+        const actualNumber = toNumber || testPhone;
 
         log(`\n*********** SEND SMS MESSAGE ***********`);
         log(`To: ${actualNumber}`);
@@ -1285,7 +1286,8 @@
       // Browser-compatible email sending with backend API
       async function sendEmailMsg(sendMsg, toEmail) {
         const testEmail = document.getElementById("testEmail").value;
-        const actualEmail = testEmail || toEmail;
+        // Test override applies only in test mode (no real recipient passed)
+        const actualEmail = toEmail || testEmail;
 
         log(`\n*********** SEND EMAIL MESSAGE ***********`);
         log(`To: ${actualEmail}`);
