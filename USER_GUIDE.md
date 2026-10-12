@@ -22,6 +22,10 @@ open it in your web browser.
 4. Leave that window open the whole time you are using the app. Closing it
    stops the server.
 
+**On a Mac:** open Terminal, `cd` into the `backend` folder and run
+`./start.command` (or double-click `start.command` in Finder; if macOS
+blocks it, right-click > Open). Requires Node.js (`brew install node`).
+
 **If you'd rather use the command line:**
 
 ```bash
