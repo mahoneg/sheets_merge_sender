@@ -146,3 +146,6 @@ prev_lists/
 # saved local UI settings (per-machine, not shared)
 backend/settings.json
 backend/test_output/
+
+# local credential dumps
+env.out

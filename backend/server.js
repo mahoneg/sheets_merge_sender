@@ -30,6 +30,13 @@ function getTwilioClient() {
   return _twilioClient;
 }
 
+function getTwilioFrom() {
+  if (!process.env.TWILIO_PHONE_NUMBER) {
+    throw new Error("TWILIO_PHONE_NUMBER missing from .env");
+  }
+  return process.env.TWILIO_PHONE_NUMBER;
+}
+
 // Email transporter — lazily initialized so missing credentials don't crash startup
 let _emailTransporter = null;
 function getEmailTransporter() {
@@ -111,7 +118,7 @@ app.post("/api/send-sms", async (req, res) => {
     // Send SMS via Twilio
     const twilioMessage = await getTwilioClient().messages.create({
       body: message,
-      from: process.env.TWILIO_PHONE_NUMBER || "+16592745880",
+      from: getTwilioFrom(),
       to: normalizedTo,
     });
 
@@ -150,13 +157,13 @@ app.post("/api/send-email", async (req, res) => {
       });
     }
 
-    const bccEmail = process.env.SECRETARY_EMAIL || "hohosecretary@gmail.com";
+    const bccEmail = process.env.SECRETARY_EMAIL;
 
     // Send email
     const mailOptions = {
-      from: process.env.EMAIL_USER || "mahoneg1@gmail.com",
+      from: process.env.EMAIL_USER,
       to: to,
-      bcc: bccEmail,
+      ...(bccEmail ? { bcc: bccEmail } : {}),
       subject: subject,
       text: message,
     };
@@ -253,9 +260,9 @@ app.get("/api/config", (req, res) => {
   res.json({
     twilioConfigured: !!process.env.TWILIO_ACCOUNT_SID,
     emailConfigured: !!process.env.EMAIL_USER,
-    defaultPhoneNumber: process.env.TWILIO_PHONE_NUMBER || "+16592745880",
-    defaultEmail: process.env.EMAIL_USER || "mahoneg1@gmail.com",
-    secretaryEmail: process.env.SECRETARY_EMAIL || "hohosecretary@gmail.com",
+    defaultPhoneNumber: process.env.TWILIO_PHONE_NUMBER || "",
+    defaultEmail: process.env.EMAIL_USER || "",
+    secretaryEmail: process.env.SECRETARY_EMAIL || "",
   });
 });
 
