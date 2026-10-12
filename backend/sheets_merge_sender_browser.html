@@ -1,0 +1,1529 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>St. Barts Celebration Sender</title>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Source+Sans+3:wght@400;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/dayjs@1.11.10/dayjs.min.js"></script>
+    <style>
+      :root {
+        --bg: #edf1ef;
+        --surface: #ffffff;
+        --surface-2: #e1e8e4;
+        --border: #c9d4ce;
+        --text: #16211d;
+        --text-muted: #55655d;
+        --accent: #a9762c;
+        --accent-strong: #7c5620;
+        --on-accent: #ffffff;
+        --success: #2e7d5c;
+        --success-bg: #e1f1e8;
+        --danger: #a6432e;
+        --danger-bg: #f5e5e0;
+        --info: #3d6e8c;
+        --info-bg: #e1edf3;
+        --focus: #3d6e8c;
+        --shadow: rgba(22, 33, 29, 0.08);
+
+        --font-display: "Fraunces", Georgia, serif;
+        --font-body: "Source Sans 3", -apple-system, "Segoe UI", sans-serif;
+        --font-mono: "IBM Plex Mono", SFMono-Regular, Consolas, monospace;
+      }
+
+      @media (prefers-color-scheme: dark) {
+        :root {
+          --bg: #131c18;
+          --surface: #1b2721;
+          --surface-2: #223129;
+          --border: #33473f;
+          --text: #e7efea;
+          --text-muted: #9fb3a8;
+          --accent: #d8ac66;
+          --accent-strong: #e9c289;
+          --on-accent: #1e1408;
+          --success: #63c296;
+          --success-bg: #1d3327;
+          --danger: #e2907b;
+          --danger-bg: #3a241e;
+          --info: #82bedd;
+          --info-bg: #1c2c34;
+          --focus: #82bedd;
+          --shadow: rgba(0, 0, 0, 0.4);
+        }
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        padding-block: 40px;
+        padding-inline: 16px;
+        background: var(--bg);
+        color: var(--text);
+        font-family: var(--font-body);
+        line-height: 1.5;
+      }
+
+      .page {
+        max-width: 880px;
+        margin: 0 auto;
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+      }
+
+      .app-header {
+        padding-block: 8px 4px;
+      }
+
+      .eyebrow {
+        margin: 0 0 6px;
+        font-size: 0.75rem;
+        font-weight: 600;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: var(--accent-strong);
+      }
+
+      .app-header h1 {
+        margin: 0 0 8px;
+        font-family: var(--font-display);
+        font-weight: 600;
+        font-size: clamp(1.75rem, 1.4rem + 1.5vw, 2.4rem);
+        text-wrap: balance;
+      }
+
+      .app-header .subtitle {
+        margin: 0;
+        max-width: 60ch;
+        color: var(--text-muted);
+        font-size: 1.05rem;
+      }
+
+      .card {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        padding: 24px;
+        box-shadow: 0 1px 3px var(--shadow);
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+      }
+
+      .card h2 {
+        margin: 0;
+        font-family: var(--font-display);
+        font-weight: 600;
+        font-size: 1.2rem;
+      }
+
+      .switch {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        cursor: pointer;
+        font-size: 0.85rem;
+        font-weight: 600;
+        color: var(--text-muted);
+        user-select: none;
+      }
+
+      .switch--section .switch-label {
+        font-family: var(--font-display);
+        font-weight: 600;
+        font-size: 1.2rem;
+        color: var(--text);
+      }
+
+      .switch-row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 24px;
+      }
+
+      .switch input {
+        position: absolute;
+        opacity: 0;
+        width: 0;
+        height: 0;
+      }
+
+      .switch-track {
+        position: relative;
+        width: 36px;
+        height: 20px;
+        flex: none;
+        background: var(--surface-2);
+        border: 1px solid var(--border);
+        border-radius: 999px;
+        transition: background-color 0.15s ease, border-color 0.15s ease;
+      }
+
+      .switch-thumb {
+        position: absolute;
+        top: 1px;
+        left: 1px;
+        width: 16px;
+        height: 16px;
+        border-radius: 50%;
+        background: var(--surface);
+        box-shadow: 0 1px 2px var(--shadow);
+        transition: transform 0.15s ease;
+      }
+
+      .switch input:checked + .switch-track {
+        background: var(--accent-strong);
+        border-color: var(--accent-strong);
+      }
+
+      .switch input:checked + .switch-track .switch-thumb {
+        transform: translateX(16px);
+        background: var(--on-accent);
+      }
+
+      .switch input:focus-visible + .switch-track {
+        outline: 2px solid var(--focus);
+        outline-offset: 2px;
+      }
+
+      @media (prefers-reduced-motion: reduce) {
+        .switch-track,
+        .switch-thumb {
+          transition: none;
+        }
+      }
+
+      .collapsible-body {
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+      }
+
+      .collapsible-body[hidden] {
+        display: none;
+      }
+
+      .card .hint {
+        margin: -8px 0 0;
+        color: var(--text-muted);
+        font-size: 0.9rem;
+      }
+
+      .card .hint code {
+        font-family: var(--font-mono);
+        background: var(--surface-2);
+        padding: 1px 5px;
+        border-radius: 4px;
+        font-size: 0.85em;
+      }
+
+      .grid-container {
+        overflow-x: auto;
+        max-height: 340px;
+        overflow-y: auto;
+        border: 1px solid var(--border);
+        border-radius: 8px;
+      }
+
+      .data-grid {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 0.85rem;
+      }
+
+      .data-grid th {
+        background: var(--surface-2);
+        color: var(--text);
+        padding: 10px 12px;
+        text-align: left;
+        position: sticky;
+        top: 0;
+        white-space: nowrap;
+        font-weight: 600;
+        border-bottom: 1px solid var(--border);
+      }
+
+      .data-grid td {
+        padding: 8px 12px;
+        border-bottom: 1px solid var(--border);
+        white-space: nowrap;
+      }
+
+      .data-grid td.num-cell {
+        font-family: var(--font-mono);
+        font-variant-numeric: tabular-nums;
+      }
+
+      .data-grid tbody tr:hover {
+        background: var(--surface-2);
+      }
+
+      .row-skip {
+        color: var(--text-muted);
+      }
+
+      .chip {
+        display: inline-flex;
+        align-items: center;
+        padding: 2px 10px;
+        border-radius: 999px;
+        font-size: 0.75rem;
+        font-weight: 600;
+        letter-spacing: 0.02em;
+        white-space: nowrap;
+      }
+
+      .chip--ready {
+        background: var(--success-bg);
+        color: var(--success);
+      }
+
+      .chip--skip {
+        background: var(--surface-2);
+        color: var(--text-muted);
+      }
+
+      .chip--sent {
+        background: var(--info-bg);
+        color: var(--info);
+      }
+
+      .chip--failed {
+        background: var(--danger-bg);
+        color: var(--danger);
+      }
+
+      .form-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(200px, 1fr));
+        gap: 16px;
+      }
+
+      .form-group {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+      }
+
+      .form-group label {
+        font-weight: 600;
+        font-size: 0.9rem;
+      }
+
+      .form-group--inline {
+        flex-direction: row;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 10px;
+      }
+
+      .form-group--inline label {
+        flex: none;
+      }
+
+      .form-group--inline select {
+        flex: 1;
+        min-width: 200px;
+      }
+
+      .form-group input,
+      .form-group select {
+        padding: 9px 10px;
+        border: 1px solid var(--border);
+        border-radius: 6px;
+        background: var(--surface);
+        color: var(--text);
+        font-family: var(--font-body);
+        font-size: 0.95rem;
+      }
+
+      .form-group input:focus,
+      .form-group select:focus,
+      .template-textarea:focus {
+        outline: 2px solid var(--focus);
+        outline-offset: 1px;
+      }
+
+      .template-textarea {
+        width: 100%;
+        height: 150px;
+        padding: 12px;
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        background: var(--surface);
+        color: var(--text);
+        font-family: var(--font-mono);
+        font-size: 0.9rem;
+        resize: vertical;
+      }
+
+      .actions {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 10px;
+      }
+
+      .btn {
+        font-family: var(--font-body);
+        font-weight: 600;
+        font-size: 0.95rem;
+        border-radius: 7px;
+        padding: 11px 22px;
+        cursor: pointer;
+        border: 1px solid transparent;
+        transition: background-color 0.15s ease, border-color 0.15s ease;
+      }
+
+      @media (prefers-reduced-motion: reduce) {
+        .btn {
+          transition: none;
+        }
+      }
+
+      .btn-primary {
+        background: var(--accent-strong);
+        color: var(--on-accent);
+      }
+
+      .btn-primary:hover:not(:disabled) {
+        background: var(--accent);
+      }
+
+      .btn-primary:disabled {
+        background: var(--surface-2);
+        color: var(--text-muted);
+        cursor: not-allowed;
+      }
+
+      .btn-ghost {
+        background: transparent;
+        color: var(--text);
+        border-color: var(--border);
+      }
+
+      .btn-ghost:hover {
+        background: var(--surface-2);
+      }
+
+      .status-stack {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+      }
+
+      .status {
+        padding: 10px 14px;
+        border-radius: 7px;
+        font-size: 0.9rem;
+        border: 1px solid transparent;
+      }
+
+      .status.success {
+        background: var(--success-bg);
+        color: var(--success);
+        border-color: var(--success);
+      }
+
+      .status.error {
+        background: var(--danger-bg);
+        color: var(--danger);
+        border-color: var(--danger);
+      }
+
+      .status.info {
+        background: var(--info-bg);
+        color: var(--info);
+        border-color: var(--info);
+      }
+
+      .log-output {
+        background: var(--surface-2);
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        padding: 14px 16px;
+        height: 300px;
+        overflow-y: auto;
+        font-family: var(--font-mono);
+        font-size: 0.8rem;
+      }
+
+      .log-line {
+        white-space: pre-wrap;
+        padding: 1px 0;
+        color: var(--text);
+      }
+
+      .log-line--success {
+        color: var(--success);
+      }
+
+      .log-line--danger {
+        color: var(--danger);
+        font-weight: 600;
+      }
+
+      .log-line--warn {
+        color: var(--accent-strong);
+      }
+
+      @media (max-width: 520px) {
+        .form-grid {
+          grid-template-columns: 1fr;
+        }
+      }
+
+      .btn-sm {
+        padding: 5px 12px;
+        font-size: 0.8rem;
+      }
+
+      #statusTotalsRow td {
+        font-weight: 600;
+        color: var(--text-muted);
+        background: var(--surface-2);
+        white-space: normal;
+      }
+
+      .modal-overlay {
+        position: fixed;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.45);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 16px;
+        z-index: 10;
+      }
+
+      .modal-overlay[hidden] {
+        display: none;
+      }
+
+      .modal-box {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        padding: 20px;
+        max-width: 480px;
+        width: 100%;
+        max-height: 80vh;
+        overflow-y: auto;
+        box-shadow: 0 8px 24px var(--shadow);
+      }
+
+      .modal-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        margin-bottom: 12px;
+      }
+
+      .modal-header h3 {
+        margin: 0;
+        font-family: var(--font-display);
+        font-weight: 600;
+        font-size: 1.1rem;
+      }
+
+      .modal-message {
+        margin: 0;
+        white-space: pre-wrap;
+        font-family: var(--font-mono);
+        font-size: 0.9rem;
+        color: var(--text);
+      }
+
+      .modal-actions {
+        display: flex;
+        justify-content: flex-end;
+        gap: 12px;
+        margin-top: 16px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="page">
+      <header class="app-header">
+        <p class="eyebrow">HoHoKus St. Barts &middot; Sobriety Celebrations</p>
+        <h1>Celebration Sender</h1>
+        <p class="subtitle">
+          Upload the roster, see who's ready to hear from you, and send
+          sobriety-anniversary messages by text or email.
+        </p>
+      </header>
+
+      <section class="card">
+        <h2>1. Upload the roster</h2>
+        <p class="hint">
+          <code>MergeList.xlsx</code> is pre-selected below - click "Load
+          File" to use it, or pick a different file first.
+        </p>
+        <div class="form-group">
+          <label for="excelFile">Excel file (.xlsx) with a "List" sheet:</label>
+          <input type="file" id="excelFile" accept=".xlsx,.xls" />
+        </div>
+        <div>
+          <button class="btn btn-primary" onclick="loadExcelFile()">Load File</button>
+        </div>
+      </section>
+
+      <section id="dataGridSection" class="card" style="display: none">
+        <h2>2. Contacts</h2>
+        <div class="grid-container">
+          <div id="dataGrid"></div>
+        </div>
+
+        <div class="form-group form-group--inline">
+          <label for="modeSelect">Mode:</label>
+          <select id="modeSelect">
+            <option value="preview">Preview Only</option>
+            <option value="send">Send (SMS, or Email if no phone)</option>
+            <option value="testfile">Test File (write to test_send_&lt;date&gt;.txt)</option>
+            <option value="testphone">Test SMS - all to one number</option>
+            <option value="testemail">Test Email - all to one address</option>
+          </select>
+        </div>
+
+        <label class="switch switch--section">
+          <input type="checkbox" id="settingsToggle" onchange="toggleSettingsVisibility()" />
+          <span class="switch-track"><span class="switch-thumb"></span></span>
+          <span class="switch-label">More settings</span>
+        </label>
+        <div id="settingsBody" class="collapsible-body" hidden>
+          <div class="form-grid">
+            <div class="form-group">
+              <label for="maxNotifies">Max notifications:</label>
+              <input type="number" id="maxNotifies" value="1000000" min="1" />
+            </div>
+            <div class="form-group">
+              <label for="testPhone">Test phone (overrides recipients for SMS mode):</label>
+              <input type="tel" id="testPhone" placeholder="+1234567890" oninput="updateModeOptionLabels()" />
+            </div>
+            <div class="form-group">
+              <label for="testEmail">Test email (overrides recipients for Email mode):</label>
+              <input type="email" id="testEmail" placeholder="test@example.com" oninput="updateModeOptionLabels()" />
+            </div>
+          </div>
+          <div>
+            <button class="btn btn-ghost" onclick="saveSettings()">Save Settings</button>
+          </div>
+        </div>
+      </section>
+
+      <div class="actions">
+        <button class="btn btn-primary" onclick="processContacts()" id="processBtn" disabled>
+          Process Contacts
+        </button>
+        <button class="btn btn-ghost" onclick="resetContactStatus()">Reset Status</button>
+        <button class="btn btn-ghost" onclick="clearLog()">Clear Log</button>
+        <button class="btn btn-ghost" onclick="downloadLog()">Download Log</button>
+      </div>
+
+      <section class="card">
+        <label class="switch switch--section">
+          <input type="checkbox" id="templateToggle" onchange="toggleTemplateVisibility()" />
+          <span class="switch-track"><span class="switch-thumb"></span></span>
+          <span class="switch-label">Show template</span>
+        </label>
+        <div id="templateBody" class="collapsible-body" hidden>
+          <p class="hint">
+            Placeholders: <code>&lt;FirstName&gt;</code>
+            <code>&lt;LastName&gt;</code> <code>&lt;CelebrationDate&gt;</code>
+            <code>&lt;Sobriety&gt;</code> <code>&lt;SobrietyUnit&gt;</code>
+          </p>
+          <textarea
+            id="messageTemplate"
+            class="template-textarea"
+            placeholder="Enter your message template here, or load an Excel file with a Template sheet..."
+          ></textarea>
+        </div>
+      </section>
+
+      <section class="card">
+        <div class="switch-row">
+          <label class="switch switch--section">
+            <input type="checkbox" id="logToggle" onchange="toggleLogVisibility()" />
+            <span class="switch-track"><span class="switch-thumb"></span></span>
+            <span class="switch-label">View Log</span>
+          </label>
+          <label class="switch switch--section">
+            <input type="checkbox" id="testFileToggle" onchange="toggleTestFileVisibility()" />
+            <span class="switch-track"><span class="switch-thumb"></span></span>
+            <span class="switch-label">View Test File</span>
+          </label>
+        </div>
+        <div id="logBody" class="collapsible-body" hidden>
+          <div id="statusContainer" class="status-stack"></div>
+          <div class="log-output" id="logOutput"></div>
+        </div>
+        <div id="testFileBody" class="collapsible-body" hidden>
+          <pre class="log-output" id="testFileOutput"></pre>
+        </div>
+      </section>
+    </div>
+
+    <div id="msgPreviewModal" class="modal-overlay" hidden onclick="if (event.target === this) closeMsgPreview()">
+      <div class="modal-box">
+        <div class="modal-header">
+          <h3 id="msgPreviewName"></h3>
+          <button class="btn btn-ghost btn-sm" onclick="closeMsgPreview()">Close</button>
+        </div>
+        <p id="msgPreviewChannel" class="hint"></p>
+        <pre id="msgPreviewText" class="modal-message"></pre>
+        <div class="modal-actions">
+          <button class="btn btn-ghost" onclick="resetContactStatus()">Reset Status</button>
+          <button class="btn btn-primary" onclick="sendPreviewMessage()">Send</button>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      // Constants (browser version)
+      const constants = {
+        defaultSpreadsheetId: "10qPkK1HpQINElAO8rQ93DXGshwDFm7UU-oJLDV3-vpg",
+        memberSheetName: "List",
+        templateSheetName: "Template",
+        FIRST_NAME_COL: 1,
+        LAST_NAME_COL: 2,
+        PHONE_COL: 3,
+        EMAIL_COL: 4,
+        SOBRIETY_COL: 5,
+        UNITS_COL: 6,
+        TEST_SENDER_LEVEL: "TEST_SENDER_LEVEL",
+        TEST_SENDER_LIVE: "LIVE",
+        TEST_SENDER_TO_PHONE: "TEST_PHONE",
+        TEST_SENDER_TO_FILE: "TEST_FILE",
+        TEST_DEFAULT_PHONE_NUMBER: "+18777804236",
+        TEST_DEFAULT_EMAIL_ADDR: "mahoneg1@gmail.com",
+        TEST_DEFAULT_FILE_PATH: "./send_file.txt",
+        SPREADSHEET_LOCAL: "SPEADSHEET_LOCAL",
+        SPREADSHEET_REMOTE: "SPEADSHEET_REMOTE",
+      };
+
+      // Global variables
+      let spreadsheetData = null;
+      let memberCount = 0;
+      let logMessages = [];
+      let currentContacts = [];
+      let lastSentTimes = {};
+
+      // Utility functions
+      function classifyLogLine(message) {
+        if (/FAILED|ERROR/.test(message)) return "log-line--danger";
+        if (/Not configured|not responding|Cannot connect/.test(message)) return "log-line--warn";
+        if (/sent OK|Written to|Backend server is running|: Configured/.test(message)) return "log-line--success";
+        return "";
+      }
+
+      function log(message) {
+        const timestamp = new Date().toLocaleTimeString();
+        const logMessage = `[${timestamp}] ${message}`;
+        logMessages.push(logMessage);
+
+        const logOutput = document.getElementById("logOutput");
+        const line = document.createElement("div");
+        const lineClass = classifyLogLine(message);
+        line.className = lineClass ? `log-line ${lineClass}` : "log-line";
+        line.textContent = logMessage;
+        logOutput.appendChild(line);
+        logOutput.scrollTop = logOutput.scrollHeight;
+
+        console.log(logMessage);
+      }
+
+      function addStatus(message, type = "info") {
+        const statusContainer = document.getElementById("statusContainer");
+        const statusDiv = document.createElement("div");
+        statusDiv.className = `status ${type}`;
+        statusDiv.textContent = message;
+        statusContainer.appendChild(statusDiv);
+
+        setTimeout(() => {
+          if (statusDiv.parentNode) {
+            statusDiv.parentNode.removeChild(statusDiv);
+          }
+        }, 5000);
+      }
+
+      function toggleTemplateVisibility() {
+        const show = document.getElementById("templateToggle").checked;
+        document.getElementById("templateBody").hidden = !show;
+      }
+
+      function toggleLogVisibility() {
+        const show = document.getElementById("logToggle").checked;
+        document.getElementById("logBody").hidden = !show;
+
+        if (show) {
+          document.getElementById("testFileToggle").checked = false;
+          document.getElementById("testFileBody").hidden = true;
+        }
+      }
+
+      function toggleTestFileVisibility() {
+        const show = document.getElementById("testFileToggle").checked;
+        document.getElementById("testFileBody").hidden = !show;
+
+        if (show) {
+          document.getElementById("logToggle").checked = false;
+          document.getElementById("logBody").hidden = true;
+          loadTestFileContent();
+        }
+      }
+
+      // Fetches today's test-file output from the server for display
+      async function loadTestFileContent() {
+        const output = document.getElementById("testFileOutput");
+        output.textContent = "Loading...";
+
+        try {
+          const response = await fetch("/api/test-file");
+          const result = await response.json();
+
+          if (!result.exists) {
+            output.textContent =
+              "No test file for today yet. Run Process Contacts in Test File mode first.";
+            return;
+          }
+
+          output.textContent = result.content;
+        } catch (error) {
+          output.textContent = `Could not load test file: ${error.message}`;
+        }
+      }
+
+      function toggleSettingsVisibility() {
+        const show = document.getElementById("settingsToggle").checked;
+        document.getElementById("settingsBody").hidden = !show;
+      }
+
+      // Shows the actual configured test phone/email in the mode dropdown
+      // instead of generic "one number"/"one address" text
+      function updateModeOptionLabels() {
+        const testPhone = document.getElementById("testPhone").value.trim();
+        const testEmail = document.getElementById("testEmail").value.trim();
+        const phoneOption = document.querySelector('#modeSelect option[value="testphone"]');
+        const emailOption = document.querySelector('#modeSelect option[value="testemail"]');
+
+        if (phoneOption) {
+          phoneOption.textContent = testPhone
+            ? `Test SMS - all to ${testPhone}`
+            : "Test SMS - all to one number";
+        }
+        if (emailOption) {
+          emailOption.textContent = testEmail
+            ? `Test Email - all to ${testEmail}`
+            : "Test Email - all to one address";
+        }
+      }
+
+      // Saves Mode/Max notifications/Test phone/Test email to settings.json
+      // on the server, so they're restored next time the app is opened
+      async function saveSettings() {
+        const settings = {
+          mode: document.getElementById("modeSelect").value,
+          maxNotifies: document.getElementById("maxNotifies").value,
+          testPhone: document.getElementById("testPhone").value,
+          testEmail: document.getElementById("testEmail").value,
+        };
+
+        try {
+          const response = await fetch("/api/settings", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(settings),
+          });
+          const result = await response.json();
+
+          if (result.success) {
+            log("Settings saved to settings.json");
+            addStatus("Settings saved", "success");
+          } else {
+            log(`FAILED: Save settings failed: ${result.error}`);
+            addStatus("Failed to save settings", "error");
+          }
+        } catch (error) {
+          log(`FAILED: Save settings error: ${error.message}`);
+          addStatus("Failed to save settings", "error");
+        }
+      }
+
+      // Restores previously saved settings, if any, on startup
+      async function loadSettings() {
+        try {
+          const response = await fetch("/api/settings");
+          if (!response.ok) return;
+
+          const settings = await response.json();
+          if (settings.mode) document.getElementById("modeSelect").value = settings.mode;
+          if (settings.maxNotifies) document.getElementById("maxNotifies").value = settings.maxNotifies;
+          if (settings.testPhone) document.getElementById("testPhone").value = settings.testPhone;
+          if (settings.testEmail) document.getElementById("testEmail").value = settings.testEmail;
+          updateModeOptionLabels();
+
+          if (Object.keys(settings).length > 0) {
+            log("Loaded saved settings from settings.json");
+          }
+        } catch (error) {
+          log(`Could not load saved settings: ${error.message}`);
+        }
+      }
+
+      function clearLog() {
+        logMessages = [];
+        document.getElementById("logOutput").textContent = "";
+        document.getElementById("statusContainer").innerHTML = "";
+      }
+
+      function downloadLog() {
+        const content = logMessages.join("\n");
+        const blob = new Blob([content], { type: "text/plain" });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = `merge_sender_log_${new Date()
+          .toISOString()
+          .slice(0, 19)
+          .replace(/:/g, "-")}.txt`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+      }
+
+      // Convert Excel serial date number to formatted string
+      function formatExcelDate(serial) {
+        if (!serial || typeof serial !== "number") return String(serial || "");
+        // Excel serial dates count from Dec 30, 1899 (accounts for Excel's leap year bug)
+        const date = new Date(Date.UTC(1899, 11, 30) + serial * 86400000);
+        return dayjs(date).format("ddd MMM D");
+      }
+
+      // Render loaded contacts into a grid below the file upload section
+      function renderGrid(workbook) {
+        const section = document.getElementById("dataGridSection");
+        const listSheet = workbook.Sheets["List"];
+        if (!listSheet) {
+          section.style.display = "none";
+          return;
+        }
+
+        const rows = XLSX.utils.sheet_to_json(listSheet);
+        if (rows.length === 0) {
+          section.style.display = "none";
+          return;
+        }
+
+        const columns = [
+          "FirstName",
+          "LastName (initial)",
+          "Phone/email",
+          "email",
+          "Sobriety",
+          "SobrietyUnit",
+        ];
+        const columnLabels = { "Phone/email": "Phone" };
+        const numericColumns = new Set(["Sobriety"]);
+
+        currentContacts = rows;
+
+        let html = '<table class="data-grid"><thead><tr><th>Status</th>';
+        columns.forEach((col) => { html += `<th>${columnLabels[col] || col}</th>`; });
+        html += "<th>Last Sent</th><th>Message</th></tr></thead><tbody>";
+
+        rows.forEach((row, rowIndex) => {
+          const checkedMember = checkMember(Object.assign({}, row));
+          const valid = checkedMember !== null;
+          const sendBy = valid ? checkedMember["SendBy"] : null;
+          html += `<tr class="${valid ? "" : "row-skip"}" data-row="${rowIndex}">`;
+          html += `<td class="status-cell">${
+            valid
+              ? '<span class="chip chip--ready">Ready</span>'
+              : '<span class="chip chip--skip">Skip</span>'
+          }</td>`;
+          columns.forEach((col) => {
+            let val = row[col] != null ? row[col] : "";
+            const cellClass = numericColumns.has(col) ? ' class="num-cell"' : "";
+            const isSendColumn =
+              (col === "Phone/email" && sendBy === "phone") ||
+              (col === "email" && sendBy === "email");
+            const content = isSendColumn ? `<strong>${String(val)}</strong>` : String(val);
+            html += `<td${cellClass}>${content}</td>`;
+          });
+          html += `<td class="last-sent-cell num-cell">${lastSentTimes[rowIndex] || ""}</td>`;
+          html += `<td>${
+            valid
+              ? `<button class="btn btn-ghost btn-sm" onclick="viewMessage(${rowIndex})">View</button>`
+              : ""
+          }</td>`;
+          html += "</tr>";
+        });
+
+        html += `</tbody><tfoot><tr id="statusTotalsRow"><td colspan="${columns.length + 3}"></td></tr></tfoot></table>`;
+        document.getElementById("dataGrid").innerHTML = html;
+        section.style.display = "block";
+        renderStatusTotals();
+      }
+
+      // Update a single contact row's status chip while processing runs
+      function setRowStatus(rowIndex, label, variant) {
+        const row = document.querySelector(`#dataGrid tr[data-row="${rowIndex}"]`);
+        if (!row) return;
+        const cell = row.querySelector(".status-cell");
+        if (cell) cell.innerHTML = `<span class="chip chip--${variant}">${label}</span>`;
+
+        if (variant === "sent" || variant === "failed") {
+          lastSentTimes[rowIndex] = new Date().toLocaleTimeString();
+          const lastSentCell = row.querySelector(".last-sent-cell");
+          if (lastSentCell) lastSentCell.textContent = lastSentTimes[rowIndex];
+        }
+
+        renderStatusTotals();
+      }
+
+      // Tallies the status chips currently shown and writes them into the
+      // grid's totals row
+      function renderStatusTotals() {
+        const totalsRow = document.getElementById("statusTotalsRow");
+        if (!totalsRow) return;
+
+        const chips = document.querySelectorAll("#dataGrid .status-cell .chip");
+        const counts = {};
+        chips.forEach((chip) => {
+          counts[chip.textContent] = (counts[chip.textContent] || 0) + 1;
+        });
+
+        const parts = Object.entries(counts).map(([label, count]) => `${label}: ${count}`);
+        if (chips.length) {
+          parts.push(`Total: ${chips.length}`);
+        }
+
+        totalsRow.querySelector("td").textContent = parts.join("   ") || "No contacts loaded";
+      }
+
+      // Shows what the message would look like for one contact, using the
+      // current template. Also wires up the modal's Send button so that
+      // single contact can be (re)sent on demand.
+      let msgPreviewRowIndex = null;
+
+      function viewMessage(rowIndex) {
+        const raw = currentContacts[rowIndex];
+        if (!raw) return;
+
+        const member = checkMember(Object.assign({}, raw));
+        if (!member) return;
+
+        const template = document.getElementById("messageTemplate").value;
+        if (!template.trim()) {
+          addStatus("Enter a message template first", "error");
+          return;
+        }
+
+        const celebrationDate = raw["CelebrationDate"]
+          ? formatExcelDate(raw["CelebrationDate"])
+          : "the celebration date";
+
+        const message = substituteTemplate(member, template, celebrationDate);
+        const name = `${member["FirstName"]} ${member["LastName (initial)"] || ""}`.trim();
+        const channel =
+          member["SendBy"] === "phone"
+            ? `Will send by Text to ${member["Phone/email"]}`
+            : `Will send by Email to ${member["email"]}`;
+
+        msgPreviewRowIndex = rowIndex;
+        showMsgPreview(name, channel, message);
+      }
+
+      function showMsgPreview(name, channel, message) {
+        document.getElementById("msgPreviewName").textContent = name;
+        document.getElementById("msgPreviewChannel").textContent = channel;
+        document.getElementById("msgPreviewText").textContent = message;
+        document.getElementById("msgPreviewModal").hidden = false;
+      }
+
+      // Sends (or resends) the message currently shown in the preview modal
+      async function sendPreviewMessage() {
+        const rowIndex = msgPreviewRowIndex;
+        const raw = currentContacts[rowIndex];
+        if (!raw) return;
+
+        const member = checkMember(Object.assign({}, raw));
+        if (!member) return;
+
+        const template = document.getElementById("messageTemplate").value;
+        if (!template.trim()) {
+          addStatus("Enter a message template first", "error");
+          return;
+        }
+
+        const celebrationDate = raw["CelebrationDate"]
+          ? formatExcelDate(raw["CelebrationDate"])
+          : "the celebration date";
+        const message = substituteTemplate(member, template, celebrationDate);
+
+        let sendOk;
+        let statusLabel;
+        if (member["SendBy"] === "phone") {
+          sendOk = await sendTextMsg(message, member["Phone/email"]);
+          statusLabel = "Text";
+        } else {
+          sendOk = await sendEmailMsg(message, member["email"]);
+          statusLabel = "Email";
+        }
+
+        setRowStatus(rowIndex, sendOk ? statusLabel : "Failed", sendOk ? "sent" : "failed");
+        addStatus(
+          sendOk ? "Message sent" : "Message failed to send - check the log",
+          sendOk ? "success" : "error"
+        );
+        closeMsgPreview();
+      }
+
+      function closeMsgPreview() {
+        document.getElementById("msgPreviewModal").hidden = true;
+      }
+
+      // Puts every contact row back to its original Ready/Skip status
+      function resetContactStatus() {
+        if (!spreadsheetData) {
+          addStatus("Load a file first", "error");
+          return;
+        }
+        renderGrid(spreadsheetData);
+        addStatus("Contact statuses reset", "info");
+      }
+
+      // Parses a workbook from raw bytes and wires it up as the active roster
+      function loadWorkbookFromBytes(data, sourceLabel) {
+        try {
+          const workbook = XLSX.read(data, { type: "array" });
+          spreadsheetData = workbook;
+          lastSentTimes = {};
+
+          log(`Successfully loaded Excel file: ${sourceLabel}`);
+          log(`Available sheets: ${workbook.SheetNames.join(", ")}`);
+
+          // Load template from Template sheet (stored in cell A1)
+          const templateSheet = workbook.Sheets["Template"];
+          if (templateSheet && templateSheet.A1) {
+            const rawTemplate = templateSheet.A1.v;
+            document.getElementById("messageTemplate").value =
+              rawTemplate.replace(/\r/g, "");
+            log("Template loaded from Excel Template sheet");
+          }
+
+          renderGrid(workbook);
+
+          document.getElementById("processBtn").disabled = false;
+          addStatus("Excel file loaded successfully!", "success");
+        } catch (error) {
+          log(`Error loading Excel file: ${error.message}`);
+          addStatus("Error loading Excel file", "error");
+        }
+      }
+
+      // File handling functions
+      function loadExcelFile() {
+        const fileInput = document.getElementById("excelFile");
+        const file = fileInput.files[0];
+
+        if (!file) {
+          addStatus("Please select a file first", "error");
+          return;
+        }
+
+        const reader = new FileReader();
+        reader.onload = function (e) {
+          loadWorkbookFromBytes(new Uint8Array(e.target.result), file.name);
+        };
+        reader.readAsArrayBuffer(file);
+      }
+
+      // Pre-fills the file picker with MergeList.xlsx from the server, if
+      // present, so it's ready for the user to click "Load File". Does not
+      // parse or load it - that still requires an explicit click.
+      async function preselectDefaultFile() {
+        const defaultFileName = "MergeList.xlsx";
+        try {
+          const response = await fetch(`/${defaultFileName}`);
+          if (!response.ok) {
+            log(`No default ${defaultFileName} found on the server`);
+            return;
+          }
+          const blob = await response.blob();
+          const file = new File([blob], defaultFileName, { type: blob.type });
+          const dataTransfer = new DataTransfer();
+          dataTransfer.items.add(file);
+          document.getElementById("excelFile").files = dataTransfer.files;
+          log(`${defaultFileName} selected - click "Load File" to load it`);
+        } catch (error) {
+          log(`Could not preselect ${defaultFileName}: ${error.message}`);
+        }
+      }
+
+      // Member validation function
+      function checkMember(member) {
+        if (!member["FirstName"] || member["FirstName"] === "") {
+          return null;
+        }
+
+        if (
+          (!member["Phone/email"] || member["Phone/email"] === "") &&
+          (!member["email"] || member["email"] === "")
+        ) {
+          return null;
+        }
+
+        if (member["Phone/email"] && member["Phone/email"] !== "") {
+          member["SendBy"] = "phone";
+        } else {
+          member["SendBy"] = "email";
+        }
+
+        return member;
+      }
+
+      // Template substitution function
+      function substituteTemplate(member, template, celebrationDate) {
+        let sobrietyUnit = member["SobrietyUnit"];
+        if (sobrietyUnit === "days") {
+          sobrietyUnit = "day";
+        } else if (sobrietyUnit === "years") {
+          sobrietyUnit = "year";
+        }
+
+        let returnString = template
+          .replace(/<FirstName>/g, member["FirstName"] || "")
+          .replace(/<LastName>/g, member["LastName (initial)"] || "");
+
+        returnString = returnString
+          .replace(/<CelebrationDate>/g, celebrationDate || "")
+          .replace(/<Sobriety>/g, member["Sobriety"] || "")
+          .replace(/<SobrietyUnit>/g, sobrietyUnit || "");
+
+        return returnString;
+      }
+
+      // Test file mode — sends message to backend which writes it to a .txt file
+      async function sendTestFileMsg(sendMsg, member) {
+        const name = `${member["FirstName"]} ${member["LastName (initial)"] || ""}`.trim();
+        const contact = member["SendBy"] === "phone"
+          ? member["Phone/email"]
+          : member["email"];
+
+        try {
+          const response = await fetch("/api/send-test-file", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              name,
+              contact,
+              sendBy: member["SendBy"],
+              message: sendMsg,
+            }),
+          });
+
+          const result = await response.json();
+
+          if (result.success) {
+            log(`  Written to: ${result.filePath}`);
+            return true;
+          }
+          log(`  FAILED: File write failed: ${result.error}`);
+          return false;
+        } catch (error) {
+          log(`  FAILED: Test file error: ${error.message}`);
+          return false;
+        }
+      }
+
+      // Browser-compatible SMS sending with backend API
+      async function sendTextMsg(sendMsg, toNumber) {
+        const testPhone = document.getElementById("testPhone").value;
+        const actualNumber = testPhone || toNumber;
+
+        log(`\n*********** SEND SMS MESSAGE ***********`);
+        log(`To: ${actualNumber}`);
+        log(`Message: ${sendMsg}`);
+
+        try {
+          const response = await fetch("/api/send-sms", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              to: actualNumber,
+              message: sendMsg,
+            }),
+          });
+
+          const result = await response.json();
+
+          if (result.success) {
+            log(`SMS sent OK. Message ID: ${result.messageId}`);
+            log(`*****************************************\n`);
+            return true;
+          }
+          log(`SMS FAILED: ${result.error}`);
+          log(`*****************************************\n`);
+          return false;
+        } catch (error) {
+          log(`SMS ERROR: ${error.message}`);
+          log(`*****************************************\n`);
+          return false;
+        }
+      }
+
+      // Browser-compatible email sending with backend API
+      async function sendEmailMsg(sendMsg, toEmail) {
+        const testEmail = document.getElementById("testEmail").value;
+        const actualEmail = testEmail || toEmail;
+
+        log(`\n*********** SEND EMAIL MESSAGE ***********`);
+        log(`To: ${actualEmail}`);
+        log(`Subject: HoHoKus St Barts Celebration`);
+        log(`Message: ${sendMsg}`);
+
+        try {
+          const response = await fetch("/api/send-email", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              to: actualEmail,
+              message: sendMsg,
+              subject: "HoHoKus St Barts Celebration",
+            }),
+          });
+
+          const result = await response.json();
+
+          if (result.success) {
+            log(`Email sent OK. Message ID: ${result.messageId}`);
+            log(`*******************************************\n`);
+            return true;
+          }
+          log(`Email FAILED: ${result.error}`);
+          log(`*******************************************\n`);
+          return false;
+        } catch (error) {
+          log(`Email ERROR: ${error.message}`);
+          log(`*******************************************\n`);
+          return false;
+        }
+      }
+
+      // Main processing function
+      async function processContacts() {
+        if (!spreadsheetData) {
+          addStatus("Please load an Excel file first", "error");
+          return;
+        }
+
+        const mode = document.getElementById("modeSelect").value;
+        const maxNotifies = parseInt(
+          document.getElementById("maxNotifies").value
+        );
+
+        if (mode === "testphone" && !document.getElementById("testPhone").value.trim()) {
+          addStatus("Test SMS mode requires a Test Phone Number to be set above.", "error");
+          return;
+        }
+
+        if (mode === "testemail" && !document.getElementById("testEmail").value.trim()) {
+          addStatus("Test Email mode requires a Test Email address to be set above.", "error");
+          return;
+        }
+
+        log("Starting contact processing...");
+        addStatus("Processing contacts...", "info");
+
+        try {
+          const listSheet = spreadsheetData.Sheets["List"];
+          if (!listSheet) {
+            throw new Error("List sheet not found in Excel file");
+          }
+
+          const celebrantList = XLSX.utils.sheet_to_json(listSheet);
+          log(`Found ${celebrantList.length} contacts in the List sheet`);
+
+          const msgTemplate = document.getElementById("messageTemplate").value;
+          if (!msgTemplate.trim()) {
+            throw new Error("Please enter a message template");
+          }
+
+          memberCount = 0;
+          let processedCount = 0;
+          let skippedCount = 0;
+          let alreadyDoneCount = 0;
+
+          for (let rowIndex = 0; rowIndex < celebrantList.length; rowIndex++) {
+            const member = celebrantList[rowIndex];
+            memberCount++;
+
+            if (memberCount === 1 && member["CelebrationDate"]) {
+              const celebrationDate = formatExcelDate(member["CelebrationDate"]);
+              log(`Celebration date: ${celebrationDate}`);
+            }
+
+            const validMember = checkMember(member);
+            if (validMember) {
+              const currentChip = document.querySelector(
+                `#dataGrid tr[data-row="${rowIndex}"] .status-cell .chip`
+              );
+              const currentStatus = currentChip ? currentChip.textContent : "Ready";
+              if (currentStatus !== "Ready") {
+                alreadyDoneCount++;
+                log(
+                  `Skipping member ${memberCount}: ${validMember["FirstName"]} - already ${currentStatus}`
+                );
+                continue;
+              }
+
+              const celebrationDate = member["CelebrationDate"]
+                ? formatExcelDate(member["CelebrationDate"])
+                : "the celebration date";
+
+              const sendMsg = substituteTemplate(
+                validMember,
+                msgTemplate,
+                celebrationDate
+              );
+
+              let statusLabel = null;
+              let sendOk = true;
+
+              if (mode === "preview") {
+                log(`\n--- PREVIEW MESSAGE ${memberCount} ---`);
+                log(
+                  `Name: ${validMember["FirstName"]} ${
+                    validMember["LastName (initial)"] || ""
+                  }`
+                );
+                log(`Send by: ${validMember["SendBy"]}`);
+                log(
+                  `Contact: ${
+                    validMember["SendBy"] === "phone"
+                      ? validMember["Phone/email"]
+                      : validMember["email"]
+                  }`
+                );
+                log(`Message: ${sendMsg}`);
+                log(`--- END PREVIEW ---\n`);
+                statusLabel = "Previewed";
+              } else if (mode === "testphone") {
+                sendOk = await sendTextMsg(sendMsg, "");
+                processedCount++;
+                statusLabel = "Test Text";
+              } else if (mode === "testemail") {
+                sendOk = await sendEmailMsg(sendMsg, "");
+                processedCount++;
+                statusLabel = "Test Email";
+              } else if (mode === "testfile") {
+                log(`Writing message for: ${validMember["FirstName"]} (${validMember["SendBy"]})`);
+                sendOk = await sendTestFileMsg(sendMsg, validMember);
+                processedCount++;
+                statusLabel = "Test File";
+              } else if (mode === "send" && validMember["SendBy"] === "phone") {
+                sendOk = await sendTextMsg(sendMsg, validMember["Phone/email"]);
+                processedCount++;
+                statusLabel = "Text";
+              } else if (mode === "send" && validMember["SendBy"] === "email") {
+                sendOk = await sendEmailMsg(sendMsg, validMember["email"]);
+                processedCount++;
+                statusLabel = "Email";
+              }
+
+              if (statusLabel) {
+                setRowStatus(
+                  rowIndex,
+                  sendOk ? statusLabel : "Failed",
+                  sendOk ? "sent" : "failed"
+                );
+              }
+
+              if (mode !== "preview") {
+                log(
+                  `Processed member ${memberCount}: ${validMember["FirstName"]} (${validMember["SendBy"]})`
+                );
+              }
+            } else {
+              skippedCount++;
+              log(
+                `Skipped member ${memberCount}: ${
+                  member["FirstName"] || "Unknown"
+                } - missing required data`
+              );
+            }
+
+            if (memberCount >= maxNotifies) {
+              log(`Reached maximum notifications limit: ${maxNotifies}`);
+              break;
+            }
+          }
+
+          log(`\n=== PROCESSING COMPLETE ===`);
+          log(`Total contacts: ${celebrantList.length}`);
+          log(`Processed: ${processedCount}`);
+          log(`Skipped: ${skippedCount}`);
+          log(`Already done: ${alreadyDoneCount}`);
+          log(`Mode: ${mode.toUpperCase()}`);
+          log(`===============================\n`);
+
+          addStatus(
+            `Processing complete! Processed: ${processedCount}, Skipped: ${skippedCount}, Already done: ${alreadyDoneCount}`,
+            "success"
+          );
+        } catch (error) {
+          log(`Error during processing: ${error.message}`);
+          addStatus(`Error: ${error.message}`, "error");
+        }
+      }
+
+      // Check backend status on startup
+      async function checkBackendStatus() {
+        try {
+          const response = await fetch("/api/health");
+          const result = await response.json();
+
+          if (result.status === "healthy") {
+            log("Backend server is running");
+            log(
+              `   Email service: ${
+                result.services.email ? "Configured" : "Not configured"
+              }`
+            );
+            log(
+              `   SMS service: ${
+                result.services.twilio ? "Configured" : "Not configured"
+              }`
+            );
+          } else {
+            log("Backend server is not responding");
+          }
+        } catch (error) {
+          log("Cannot connect to backend server");
+          log(
+            "   Make sure the backend server is running on http://localhost:3000"
+          );
+        }
+      }
+
+      document.addEventListener("DOMContentLoaded", function () {
+        log("Sheets Merge Sender Browser Version initialized");
+        checkBackendStatus();
+        preselectDefaultFile();
+        loadSettings();
+      });
+    </script>
+  </body>
+</html>
